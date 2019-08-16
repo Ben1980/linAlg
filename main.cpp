@@ -9,7 +9,10 @@ int main(int argc, char **argv) {
 
     int res = context.run();
 
-    Matrix<double, 3, 3> a = {{}};
+    Matrix<double, 2, 3> a = {{{3,2,1},{1,0,2}}};
+
+    fmt::print("\n");
+    Helper::PrintMatrix(a);
 
     if (context.shouldExit()) {
         return res;
