@@ -1,7 +1,10 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
 
+#include <chrono>
 #include "matrix.h"
+#include "utils.h"
+#include "matrixFactory.h"
 
 int main(int argc, char **argv) {
     doctest::Context context;
@@ -9,13 +12,24 @@ int main(int argc, char **argv) {
 
     int res = context.run();
 
-    Matrix<double, 2, 3> a = {{{3,2,1},{1,0,2}}};
+    Matrix<double> a = {{{3,2,1},{1,0,2}}};
+    Matrix<int> identity = MatrixFactory::IdentityMatrix<int>(4);
 
     fmt::print("\n");
-    Helper::PrintMatrix(a);
+    Utils::PrintMatrix(a);
+    fmt::print("\n");
+
+    for(size_t i = 2; i < 10000; i *= i) {
+        Matrix<double> A = MatrixFactory::RandomMatrix<double>({i, i, -100., 100.});
+
+        const auto start = std::chrono::system_clock::now();
+        Matrix C = A * A;
+        const auto end = std::chrono::system_clock::now();
+        const int elapsed= std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count();
+        fmt::print("Elapsed time for C = A * A, {}x{}: {}ns\n", i,i, elapsed);
+    }
 
     if (context.shouldExit()) {
         return res;
     }
 }
-
