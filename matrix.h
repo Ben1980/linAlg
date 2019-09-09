@@ -10,6 +10,7 @@ class Matrix {
     static_assert(std::is_arithmetic<T>::value, "T must be numeric");
 
 public:
+    Matrix() = default;
     Matrix(const std::vector<std::vector<T>> &m) : matrix(m) {
         AssertData(matrix);
     }
@@ -25,6 +26,9 @@ public:
     const auto & operator[](size_t index) const {
         return matrix[index];
     }
+
+    [[nodiscard]] size_t rows() const { return matrix.size(); }
+    [[nodiscard]] size_t columns() const { return matrix.front().size(); }
 
     template<typename TT>
     friend inline auto operator*(const Matrix<TT> &lhs, const Matrix<TT> & rhs);
@@ -43,11 +47,11 @@ private:
     static auto Multiply(const Matrix<T> &lhs, const Matrix<T>& rhs) {
         AssertData(lhs());
         AssertData(rhs());
-        assert(lhs().front().size() == rhs().size());
+        assert(lhs.columns() == rhs.rows());
 
-        const size_t lhsRows = lhs().size();
-        const size_t rhsColumns = rhs().front().size();
-        const size_t lhsColumns = lhs().front().size();
+        const size_t lhsRows = lhs.rows();
+        const size_t rhsColumns = rhs.columns();
+        const size_t lhsColumns = lhs.columns();
 
         std::vector<std::vector<T>> C(lhsRows, std::vector<T>(rhsColumns));
 
@@ -92,11 +96,11 @@ namespace TestUtils {
     template<typename T>
     bool CompareMatrix(const Matrix<T> &toCheck, const Matrix<T> &expected) {
         if(toCheck().empty() || expected().empty()) return false;
-        if(toCheck().size() != expected().size()) return false;
+        if(toCheck.rows() != expected.rows()) return false;
         if(toCheck().front().empty() || expected().front().empty()) return false;
-        if(toCheck().front().size() != expected().front().size()) return false;
+        if(toCheck.columns() != expected.columns()) return false;
 
-        for(size_t row = 0; row < expected().size(); ++row) {
+        for(size_t row = 0; row < expected.rows(); ++row) {
             for(size_t column = 0; column < expected[row].size(); ++column) {
                 const T & data = toCheck[row][column];
                 const T & e = expected[row][column];
@@ -185,24 +189,6 @@ TEST_SUITE("Matrix test suite") {
             const Matrix c = vecA * vecB;
 
             CHECK(TestUtils::ValuesAreEqual(c().front().front(), 7.));
-        }
-    }
-
-    TEST_CASE("Matrix Decomposition") {
-        //     |1  2  3|   |1  0  0|   |1  2  3|
-        // A = |1  1  1| = |1  1  0| * |0 -1 -2|
-        //     |3  3  1|   |3  3  1|   |0  0 -2|
-
-        SUBCASE("LU") {
-            /*Matrix<double, 3, 3> A = {{{1, 2, 3}, {1, 1, 1}, {3, 3, 1}}};
-            LinAlg::Decomposition<double, 3, 3> LU = LinAlg::LUDecomposition(A);
-
-            Matrix<double, 3, 3> expectedL = {{{1, 0, 0}, {1, 1, 0}, {3, 3, 1}}};
-            Matrix<double, 3, 3> expectedU = {{{1, 2, 3}, {0, -1, -2}, {0, 0, -2}}};
-
-            CHECK(TestUtils::CompareMatrix(LU.L, expectedL));
-            CHECK(TestUtils::CompareMatrix(LU.U, expectedU));*/
-            CHECK(false);
         }
     }
 }

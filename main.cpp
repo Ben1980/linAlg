@@ -5,6 +5,8 @@
 #include "matrix.h"
 #include "utils.h"
 #include "matrixFactory.h"
+#include "luDecomposition.h"
+#include "gauss.h"
 
 int main(int argc, char **argv) {
     doctest::Context context;
@@ -16,10 +18,8 @@ int main(int argc, char **argv) {
     Matrix<int> identity = MatrixFactory::IdentityMatrix<int>(4);
 
     fmt::print("\n");
-    Utils::PrintMatrix(a);
-    fmt::print("\n");
 
-    for(size_t i = 2; i < 10000; i *= i) {
+    for(size_t i = 2; i <= 256; i *= i) {
         Matrix<double> A = MatrixFactory::RandomMatrix<double>({i, i, -100., 100.});
 
         const auto start = std::chrono::system_clock::now();
@@ -28,6 +28,12 @@ int main(int argc, char **argv) {
         const int elapsed= std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count();
         fmt::print("Elapsed time for C = A * A, {}x{}: {}ns\n", i,i, elapsed);
     }
+    fmt::print("\n");
+
+    fmt::print("LU-Decomposition with pivoting");
+    LUDecomposition::Decomposition test = LUDecomposition::Decompose(a);
+
+    Matrix<double> b = Gauss::Solve<double>(a, {-10,-19,-11});
 
     if (context.shouldExit()) {
         return res;
