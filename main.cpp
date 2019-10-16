@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     fmt::print("LU-Decomposition with pivoting");
     LUDecomposition::Decomposition test = LUDecomposition::Decompose(a);
 
-    Matrix<double> b = Gauss::Solve<double>(a, {-10,-19,-11});
+    Gauss::Decomposition<double> b = Gauss::Decompose(a);
 
     if (context.shouldExit()) {
         return res;
