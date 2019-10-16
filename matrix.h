@@ -5,6 +5,8 @@
 #include <vector>
 #include <type_traits>
 #include <cassert>
+#include <algorithm>
+#include <array>
 
 template<typename T>
 class Matrix {
@@ -19,11 +21,27 @@ public:
     Matrix(size_t rows, size_t columns) : nbRows(rows), nbColumns(columns), matrix(std::vector<std::vector<T>>(rows, std::vector<T>(columns))) {
         AssertData(*this);
     }
+#elif _ASARRAY
+    Matrix(size_t nbRows, size_t nbColumns, T m[]) : nbRows(nbRows), nbColumns(nbColumns) {
+        const int size = nbRows * nbColumns;
+        matrix = new T[size];
+        for(size_t index = 0; index < size; ++index) {
+            matrix[index] = m[index];
+        }
+        AssertData(*this);
+    }
+    Matrix(size_t nbRows, size_t nbColumns) : nbRows(nbRows), nbColumns(nbColumns) {
+        matrix = new double[nbRows * nbColumns];
+        AssertData(*this);
+    }
+    ~Matrix() {
+        delete [] matrix;
+    }
 #else
     Matrix(size_t nbRows, size_t nbColumns, const std::vector<T> &m) : nbRows(nbRows), nbColumns(nbColumns), matrix(m) {
         AssertData(*this);
     }
-    Matrix(size_t nbRows, size_t nbColumns) : matrix(std::vector<T>(nbRows*nbColumns) {
+    Matrix(size_t nbRows, size_t nbColumns) : nbRows(nbRows), nbColumns(nbColumns), matrix(std::vector<T>(nbRows*nbColumns)) {
         AssertData(*this);
     }
 #endif
@@ -32,7 +50,7 @@ public:
 #ifdef _ASMATRIX       
         return matrix[row][column];
 #else
-        return matrix[row + row*column];
+        return matrix[row*nbColumns + column];
 #endif
     }
 
@@ -40,7 +58,7 @@ public:
 #ifdef _ASMATRIX       
         return matrix[row][column];
 #else
-        return matrix[row + row*column];
+        return matrix[row*nbColumns + column];
 #endif
     }
 
@@ -64,11 +82,17 @@ private:
         for(const auto & row : m.matrix) {
             assert(row.size() == m.nbColumns);
         }
+#elif _ASARRAY
+        assert(m.nbRows > 0);
+        assert(m.nbColumns > 0);
+        assert(m.matrix != nullptr);
 #else
+        assert(!m.matrix.empty());
+        assert(m.matrix.size() == m.nbRows*m.nbColumns);
 #endif
     }
 
-    static auto Multiply(const Matrix<T> &lhs, const Matrix<T>& rhs) {
+    static Matrix<T> Multiply(const Matrix<T> &lhs, const Matrix<T>& rhs) {
         AssertData(lhs);
         AssertData(rhs);
         assert(lhs.columns() == rhs.rows());
@@ -133,18 +157,31 @@ namespace TestUtils {
         if(toCheck.rows() != expected.rows()) return false;
         if(toCheck.columns() != expected.columns()) return false;
 
+        bool equalData = true;
         for(size_t row = 0; row < expected.rows(); ++row) {
             for(size_t column = 0; column < expected.columns(); ++column) {
                 const T & data = toCheck(row, column);
                 const T & e = expected(row, column);
 
-                if(!ValuesAreEqual(data, e)) {
-                    return false;
-                }
+                equalData = equalData && ValuesAreEqual(data, e);
             }
         }
 
-        return true;
+        if(!equalData) {
+            std::vector<T> check(toCheck.rows()*toCheck.columns()), expect(expected.rows()*expected.columns());
+
+            for(size_t row = 0; row < expected.rows(); ++row) {
+                for(size_t column = 0; column < expected.columns(); ++column) {
+                    check[row*toCheck.columns() + column] = toCheck(row, column);
+                    expect[row*expected.columns() + column] = expected(row, column);
+                }
+            }
+
+            fmt::print("To Check = {}\n", fmt::join(check, " "));
+            fmt::print("Expected = {}\n", fmt::join(expect, " "));
+        }
+        
+        return equalData;
     }
 }
 
@@ -153,6 +190,8 @@ TEST_SUITE("Matrix test suite") {
         const Matrix<double> a = {
 #ifdef _ASMATRIX
             {{3, 2, 1}, {1, 0, 2}}
+#elif _ASARRAY
+            2, 3, (std::array<double, 6>{3, 2, 1, 1, 0, 2}).data()
 #else
             2, 3, {3, 2, 1, 1, 0, 2}
 #endif
@@ -160,6 +199,8 @@ TEST_SUITE("Matrix test suite") {
         const Matrix<double> b = {
 #ifdef _ASMATRIX
             {{1, 2}, {0, 1}, {4, 0}}
+#elif _ASARRAY
+            3, 2, (std::array<double, 6>{1, 2, 0, 1, 4, 0}).data()
 #else
             3, 2, {1, 2, 0, 1, 4, 0}
 #endif
@@ -177,6 +218,8 @@ TEST_SUITE("Matrix test suite") {
             const Matrix<double> expected = {
 #ifdef _ASMATRIX
                 {{7, 8}, {9, 2}}
+#elif _ASARRAY
+                2, 2, (std::array<double, 4>{7, 8, 9, 2}).data()
 #else
                 2, 2, {7, 8, 9, 2}
 #endif
@@ -197,6 +240,8 @@ TEST_SUITE("Matrix test suite") {
             const Matrix<double> expected = {
 #ifdef _ASMATRIX
                 {{5, 2, 5}, {1, 0, 2}, {12, 8, 4}}
+#elif _ASARRAY
+                3, 3, (std::array<double, 9>{5, 2, 5, 1, 0, 2, 12, 8, 4}).data()
 #else
                 3, 3, {5, 2, 5, 1, 0, 2, 12, 8, 4}
 #endif
@@ -216,6 +261,8 @@ TEST_SUITE("Matrix test suite") {
             const Matrix<double> vec = {
 #ifdef _ASMATRIX
                 {{1}, {0}, {4}}
+#elif _ASARRAY
+                3, 1, (std::array<double, 3>{1, 0, 4}).data()
 #else
                 3, 1, {1, 0, 4}
 #endif
@@ -224,6 +271,8 @@ TEST_SUITE("Matrix test suite") {
             const Matrix<double> expected = {
 #ifdef _ASMATRIX           
                 {{7}, {9}}
+#elif _ASARRAY
+                2, 1, (std::array<double, 2>{7, 9}).data()
 #else
                 2, 1, {7, 9}
 #endif
@@ -242,6 +291,8 @@ TEST_SUITE("Matrix test suite") {
             const Matrix<double> vec = {
 #ifdef _ASMATRIX
                 {{3, 2, 1}}
+#elif _ASARRAY
+                1, 3, (std::array<double, 3>{3, 2, 1}).data()
 #else
                 1, 3, {3, 2, 1}
 #endif
@@ -250,6 +301,8 @@ TEST_SUITE("Matrix test suite") {
             const Matrix<double> expected = {
 #ifdef _ASMATRIX
                 {{7, 8}}
+#elif _ASARRAY
+                1, 2, (std::array<double, 2>{7, 8}).data()
 #else
                 1, 2, {7, 8}
 #endif
@@ -268,6 +321,8 @@ TEST_SUITE("Matrix test suite") {
             const Matrix<double> vecA = {
 #ifdef _ASMATRIX
                 {{3, 2, 1}}
+#elif _ASARRAY
+                1, 3, (std::array<double, 3>{3, 2, 1}).data()
 #else
                 1, 3, {3, 2, 1}
 #endif
@@ -275,6 +330,8 @@ TEST_SUITE("Matrix test suite") {
             const Matrix<double> vecB = {
 #ifdef _ASMATRIX
                 {{1}, {0}, {4}}
+#elif _ASARRAY
+                3, 1, (std::array<double, 3>{1, 0, 4}).data()
 #else
                 3, 1, {1, 0, 4}
 #endif

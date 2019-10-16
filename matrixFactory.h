@@ -4,33 +4,36 @@
 #include <random>
 #include <cassert>
 #include <functional>
+#include <array>
 
 namespace MatrixFactory {
     template <typename T>
-    auto IdentityMatrix(size_t size) {
+    Matrix<T> IdentityMatrix(size_t size) {
         static_assert(std::is_arithmetic<T>::value, "C must be numeric");
         assert(size > 0);
 
 #ifdef _ASMATRIX
         std::vector<std::vector<T>> matrix(size, std::vector<T>(size));
-#else
-        std::vector<T> matrix(size*size);
-#endif
-
-#ifdef _ASMATRIX
         for(size_t index = 0; index < size; ++index) {
             matrix[index][index] = 1;
         }
-#else
+        return Matrix<T>(matrix);
+#elif _ASARRAY
+        const size_t arrSize = size*size;
+        std::vector<T> vec(arrSize);
         for(size_t index = 0; index < size; ++index) {
-            matrix[index + index*size + index] = 1;
+            vec[index*size + index] = 1;
         }
-#endif
 
-#ifdef _ASMATRIX
+        T * m = &vec[0];
+        Matrix<T> matrix(size, size, m);
         return matrix;
 #else
-        return Matrix(size, size, matrix);
+        std::vector<T> matrix(size*size);
+        for(size_t index = 0; index < size; ++index) {
+            matrix[index*size + index] = 1;
+        }
+        return Matrix<T>(size, size, matrix);
 #endif
     }
 
@@ -45,38 +48,24 @@ namespace MatrixFactory {
     };
 
     template <typename T>
-    auto RandomMatrix(const Range<T> &range) {
+    Matrix<T> RandomMatrix(const Range<T> &range) {
         static_assert(std::is_arithmetic<T>::value, "C must be numeric");
         assert(range.rows > 0);
         assert(range.columns > 0);
 
-#ifdef _ASMATRIX
-        std::vector<std::vector<T>> matrix(range.rows, std::vector<T>(range.columns));
-#else
-        std::vector<T> matrix(range.rows*range.columns);
-#endif
+        Matrix<T> matrix(range.rows, range.columns);
 
         std::mt19937 mt(std::random_device{}());
         std::uniform_real_distribution<> real_dist(range.from, range.to);
         const auto gen = std::bind(std::ref(real_dist), std::ref(mt));
 
-#ifdef _ASMATRIX
-        for(auto & row : matrix) {
-            std::generate(row.begin(), row.end(), [gen]() -> auto {
-                return gen();
-            });
+        for(size_t row = 0; row < range.rows; ++row) {
+            for(size_t column = 0; column < range.columns; ++column) {
+                matrix(row, column) = gen();
+            }
         }
-#else
-        std::generate(matrix.begin(), matrix.end(), [gen]() -> auto {
-            return gen();
-        });
-#endif
 
-#ifdef _ASMATRIX
         return matrix;
-#else
-        return Matrix(range.rows, range.columns, matrix);
-#endif
     }
 }
 
@@ -91,6 +80,8 @@ TEST_SUITE("MatrixFactory test suite") {
         Matrix<int> expected = {
 #ifdef _ASMATRIX
             {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}
+#elif _ASARRAY
+            4, 4, (std::array<int, 16>{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}).data()
 #else
             4, 4, {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
 #endif

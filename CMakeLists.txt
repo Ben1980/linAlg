@@ -4,7 +4,7 @@ project(linAlg)
 set(SOURCE main.cpp matrix.h utils.h matrixFactory.h luDecomposition.h gauss.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE})
-add_compile_definitions(_ASMATRIX)
+#add_compile_definitions(_ASMATRIX)
 #add_compile_definitions(_ASARRAY)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
