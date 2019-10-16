@@ -1,9 +1,9 @@
 #define DOCTEST_CONFIG_IMPLEMENT
-#include <doctest/doctest.h>
 
+#include <doctest/doctest.h>
+#include <fmt/format.h>
 #include <chrono>
 #include "matrix.h"
-#include "utils.h"
 #include "matrixFactory.h"
 #include "luDecomposition.h"
 #include "gauss.h"
@@ -14,7 +14,13 @@ int main(int argc, char **argv) {
 
     int res = context.run();
 
-    Matrix<double> a = {{{3,2,1},{1,0,2}}};
+    Matrix<double> a = {
+#ifdef _ASMATRIX
+        {{3,2,1},{1,0,2}}
+#else
+        2, 3, {3, 2, 1, 1, 0, 2}
+#endif
+    };
     Matrix<int> identity = MatrixFactory::IdentityMatrix<int>(4);
 
     fmt::print("\n");

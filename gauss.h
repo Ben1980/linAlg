@@ -15,7 +15,7 @@ namespace Gauss {
     }
 }
 
-TEST_SUITE("Matrix solve test suite") {
+/*TEST_SUITE("Matrix solve test suite") {
     TEST_CASE("Matrix Decomposition") {
         //     |2  3 -5|-10|   |2  3 -5|-10|
         // A = |4  8 -3|-19| = |0  2  7| 1 |
@@ -30,6 +30,6 @@ TEST_SUITE("Matrix solve test suite") {
             CHECK(TestUtils::CompareMatrix(B, expected));
         }
     }
-}
+}*/
 
 #endif //LINALG_GAUSS_H

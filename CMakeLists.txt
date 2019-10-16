@@ -1,10 +1,13 @@
-cmake_minimum_required(VERSION 3.13)
-project(linAlg LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.14)
+project(linAlg)
 
-add_executable(linAlg main.cpp matrix.h utils.h matrixFactory.h luDecomposition.h gauss.h)
+set(SOURCE main.cpp matrix.h utils.h matrixFactory.h luDecomposition.h gauss.h)
 
+add_executable(${PROJECT_NAME} ${SOURCE})
+add_compile_definitions(_ASMATRIX)
+#add_compile_definitions(_ASARRAY)
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 find_package(fmt CONFIG REQUIRED)
 find_package(doctest CONFIG REQUIRED)
-target_link_libraries(linAlg PRIVATE fmt::fmt fmt::fmt-header-only doctest::doctest)
-
-set_property(TARGET linAlg PROPERTY CXX_STANDARD 17)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt fmt::fmt-header-only doctest::doctest)

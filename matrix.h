@@ -1,8 +1,9 @@
 #ifndef LINALG_MATRIX_H
 #define LINALG_MATRIX_H
 
+#include <cmath>
 #include <vector>
-#include <utility>
+#include <type_traits>
 #include <cassert>
 
 template<typename T>
@@ -11,54 +12,77 @@ class Matrix {
 
 public:
     Matrix() = default;
-    Matrix(const std::vector<std::vector<T>> &m) : matrix(m) {
-        AssertData(matrix);
+#ifdef _ASMATRIX
+    Matrix(const std::vector<std::vector<T>> &m) : nbRows(m.size()), nbColumns(m.front().size()), matrix(m) {
+        AssertData(*this);
+    }
+    Matrix(size_t rows, size_t columns) : nbRows(rows), nbColumns(columns), matrix(std::vector<std::vector<T>>(rows, std::vector<T>(columns))) {
+        AssertData(*this);
+    }
+#else
+    Matrix(size_t nbRows, size_t nbColumns, const std::vector<T> &m) : nbRows(nbRows), nbColumns(nbColumns), matrix(m) {
+        AssertData(*this);
+    }
+    Matrix(size_t nbRows, size_t nbColumns) : matrix(std::vector<T>(nbRows*nbColumns) {
+        AssertData(*this);
+    }
+#endif
+    
+    const T & operator()(size_t row, size_t column) const {
+#ifdef _ASMATRIX       
+        return matrix[row][column];
+#else
+        return matrix[row + row*column];
+#endif
     }
 
-    Matrix(std::vector<std::vector<T>> &&m) : matrix(std::move(m)) {
-        AssertData(matrix);
+    T & operator()(size_t row, size_t column) {
+#ifdef _ASMATRIX       
+        return matrix[row][column];
+#else
+        return matrix[row + row*column];
+#endif
     }
 
-    const auto & operator()() const {
-        return matrix;
+    [[nodiscard]] size_t rows() const {
+        return nbRows;
     }
 
-    const auto & operator[](size_t index) const {
-        return matrix[index];
+    [[nodiscard]] size_t columns() const {
+        return nbColumns;
     }
 
-    [[nodiscard]] size_t rows() const { return matrix.size(); }
-    [[nodiscard]] size_t columns() const { return matrix.front().size(); }
-
-    template<typename TT>
-    friend inline auto operator*(const Matrix<TT> &lhs, const Matrix<TT> & rhs);
+    template<typename U>
+    friend inline auto operator*(const Matrix<U> &lhs, const Matrix<U> & rhs);
 
 private:
-    static void AssertData(const std::vector<std::vector<T>> &m) {
-        assert(!m.empty());
-        const size_t columnCount = m.front().size();
+    static void AssertData(const Matrix<T> &m) {
+#ifdef _ASMATRIX 
+        assert(!m.matrix.empty());
+        assert(!m.matrix.front().empty());
 
-        std::for_each(m.begin(), m.end(), [columnCount](const auto &element) {
-            assert(!element.empty());
-            assert(element.size() == columnCount);
-        });
+        for(const auto & row : m.matrix) {
+            assert(row.size() == m.nbColumns);
+        }
+#else
+#endif
     }
 
     static auto Multiply(const Matrix<T> &lhs, const Matrix<T>& rhs) {
-        AssertData(lhs());
-        AssertData(rhs());
+        AssertData(lhs);
+        AssertData(rhs);
         assert(lhs.columns() == rhs.rows());
 
         const size_t lhsRows = lhs.rows();
         const size_t rhsColumns = rhs.columns();
         const size_t lhsColumns = lhs.columns();
 
-        std::vector<std::vector<T>> C(lhsRows, std::vector<T>(rhsColumns));
-
+        Matrix<T> C(lhsRows, rhsColumns);
+        
         for (size_t i = 0; i < lhsRows; ++i) {
             for (size_t k = 0; k < rhsColumns; ++k) {
                 for (size_t j = 0; j < lhsColumns; ++j) {
-                    C[i][k] += + lhs[i][j] * rhs[j][k];
+                    C(i, k) += lhs(i, j) * rhs(j, k);
                 }
             }
         }
@@ -66,12 +90,21 @@ private:
         return C;
     }
 
-    const std::vector<std::vector<T>> matrix;
+    const size_t nbRows{0};
+    const size_t nbColumns{0};
+
+#ifdef _ASMATRIX
+    std::vector<std::vector<T>> matrix;
+#elif _ASARRAY
+    T * matrix;
+#else
+    std::vector<T> matrix;
+#endif
 };
 
-template<typename T>
-inline auto operator*(const Matrix<T> &lhs, const Matrix<T> & rhs) {
-    return Matrix<T>::Multiply(lhs, rhs);
+template<typename U>
+inline auto operator*(const Matrix<U> &lhs, const Matrix<U> & rhs) {
+    return Matrix<U>::Multiply(lhs, rhs);
 }
 
 namespace TestUtils {
@@ -95,15 +128,15 @@ namespace TestUtils {
 
     template<typename T>
     bool CompareMatrix(const Matrix<T> &toCheck, const Matrix<T> &expected) {
-        if(toCheck().empty() || expected().empty()) return false;
+        if(toCheck.rows() == 0 || expected.rows() == 0) return false;
+        if(toCheck.columns() == 0 || expected.columns() == 0) return false;
         if(toCheck.rows() != expected.rows()) return false;
-        if(toCheck().front().empty() || expected().front().empty()) return false;
         if(toCheck.columns() != expected.columns()) return false;
 
         for(size_t row = 0; row < expected.rows(); ++row) {
-            for(size_t column = 0; column < expected[row].size(); ++column) {
-                const T & data = toCheck[row][column];
-                const T & e = expected[row][column];
+            for(size_t column = 0; column < expected.columns(); ++column) {
+                const T & data = toCheck(row, column);
+                const T & e = expected(row, column);
 
                 if(!ValuesAreEqual(data, e)) {
                     return false;
@@ -117,8 +150,20 @@ namespace TestUtils {
 
 TEST_SUITE("Matrix test suite") {
     TEST_CASE ("Matrix Multiplication") {
-        const Matrix<double> a = {{{3, 2, 1}, {1, 0, 2}}};
-        const Matrix<double> b = {{{1, 2}, {0, 1}, {4, 0}}};
+        const Matrix<double> a = {
+#ifdef _ASMATRIX
+            {{3, 2, 1}, {1, 0, 2}}
+#else
+            2, 3, {3, 2, 1, 1, 0, 2}
+#endif
+        };
+        const Matrix<double> b = {
+#ifdef _ASMATRIX
+            {{1, 2}, {0, 1}, {4, 0}}
+#else
+            3, 2, {1, 2, 0, 1, 4, 0}
+#endif
+        };
 
         SUBCASE("c=a*b") {
             //            |1  2|
@@ -128,8 +173,14 @@ TEST_SUITE("Matrix test suite") {
             // |3  2  1|  |7  8|
             // |1  0  2|  |9  2|
 
-            const Matrix c = a * b;
-            const Matrix<double> expected = {{{7, 8}, {9, 2}}};
+            Matrix c = a * b;
+            const Matrix<double> expected = {
+#ifdef _ASMATRIX
+                {{7, 8}, {9, 2}}
+#else
+                2, 2, {7, 8, 9, 2}
+#endif
+            };
 
             CHECK(TestUtils::CompareMatrix(c, expected));
         }
@@ -142,8 +193,14 @@ TEST_SUITE("Matrix test suite") {
             // |0  1|  |1  0  2|
             // |4  0|  |12 8  4|
 
-            const Matrix c = b * a;
-            const Matrix<double> expected = {{{5, 2, 5}, {1, 0, 2}, {12, 8, 4}}};
+            Matrix c = b * a;
+            const Matrix<double> expected = {
+#ifdef _ASMATRIX
+                {{5, 2, 5}, {1, 0, 2}, {12, 8, 4}}
+#else
+                3, 3, {5, 2, 5, 1, 0, 2, 12, 8, 4}
+#endif
+            };
 
             CHECK(TestUtils::CompareMatrix(c, expected));
         }
@@ -156,9 +213,21 @@ TEST_SUITE("Matrix test suite") {
             // |3  2  1|  |7|
             // |1  0  2|  |9|
 
-            const Matrix<double> vec = {{{1}, {0}, {4}}};
-            const Matrix c = a * vec;
-            const Matrix<double> expected = {{{7}, {9}}};
+            const Matrix<double> vec = {
+#ifdef _ASMATRIX
+                {{1}, {0}, {4}}
+#else
+                3, 1, {1, 0, 4}
+#endif
+            };
+            Matrix c = a * vec;
+            const Matrix<double> expected = {
+#ifdef _ASMATRIX           
+                {{7}, {9}}
+#else
+                2, 1, {7, 9}
+#endif
+            };
 
             CHECK(TestUtils::CompareMatrix(c, expected));
         }
@@ -170,9 +239,21 @@ TEST_SUITE("Matrix test suite") {
             //
             // |3  2  1|  |7  8|
 
-            const Matrix<double> vec = {{{3, 2, 1}}};
-            const Matrix c = vec * b;
-            const Matrix<double> expected = {{{7, 8}}};
+            const Matrix<double> vec = {
+#ifdef _ASMATRIX
+                {{3, 2, 1}}
+#else
+                1, 3, {3, 2, 1}
+#endif
+            };
+            Matrix c = vec * b;
+            const Matrix<double> expected = {
+#ifdef _ASMATRIX
+                {{7, 8}}
+#else
+                1, 2, {7, 8}
+#endif
+            };
 
             CHECK(TestUtils::CompareMatrix(c, expected));
         }
@@ -184,11 +265,23 @@ TEST_SUITE("Matrix test suite") {
             //
             // |3  2  1|  |7|
 
-            const Matrix<double> vecA = {{{3, 2, 1}}};
-            const Matrix<double> vecB = {{{1}, {0}, {4}}};
-            const Matrix c = vecA * vecB;
+            const Matrix<double> vecA = {
+#ifdef _ASMATRIX
+                {{3, 2, 1}}
+#else
+                1, 3, {3, 2, 1}
+#endif
+            };
+            const Matrix<double> vecB = {
+#ifdef _ASMATRIX
+                {{1}, {0}, {4}}
+#else
+                3, 1, {1, 0, 4}
+#endif
+            };
+            Matrix c = vecA * vecB;
 
-            CHECK(TestUtils::ValuesAreEqual(c().front().front(), 7.));
+            CHECK(TestUtils::ValuesAreEqual(c(0, 0), 7.));
         }
     }
 }
