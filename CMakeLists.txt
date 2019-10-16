@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 project(linAlg)
 
-set(SOURCE main.cpp matrix.h utils.h matrixFactory.h luDecomposition.h gauss.h)
+set(SOURCE main.cpp matrix.h utils.h matrixFactory.h luDecomposition.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE})
 add_compile_definitions(_ASMATRIX)

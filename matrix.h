@@ -21,6 +21,8 @@ public:
     Matrix(size_t rows, size_t columns) : nbRows(rows), nbColumns(columns), matrix(std::vector<std::vector<T>>(rows, std::vector<T>(columns))) {
         AssertData(*this);
     }
+    Matrix(const Matrix &m) = default;
+    Matrix(Matrix &&m) = default;
 #elif _ASARRAY
     Matrix(size_t nbRows, size_t nbColumns, T m[]) : nbRows(nbRows), nbColumns(nbColumns) {
         const int size = nbRows * nbColumns;

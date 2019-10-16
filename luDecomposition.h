@@ -8,44 +8,73 @@ namespace LUDecomposition {
     struct Decomposition {
         Matrix<T> L;
         Matrix<T> U;
-        Matrix<T> P;
-        Matrix<T> Q;
+
+        Decomposition(const Matrix<T> &matrix) : L(matrix.rows(), matrix.columns()), U(matrix) {}
     };
 
     template<typename T>
     Decomposition<T> Decompose(const Matrix<T> &matrix) {
-        std::vector<std::vector<T>> L;
-        std::vector<std::vector<T>> U;
+        Decomposition<T> decomposition(matrix);
 
         for(size_t column = 0; column < matrix.columns(); ++column) {
-            for(size_t row = 0; row < matrix.rows(); ++row) {
-                for(size_t col = 0; col < matrix.columns(); ++col) {
-                    //L[column, ]
+            for(size_t row = column+1; row < matrix.rows(); ++row) {
+                const T & val = decomposition.U(column, column);
+                if(val > 0) {
+                    decomposition.L(row, column) = decomposition.U(row, column) / decomposition.U(column, column);
+                }
+                for(size_t col = column; col < matrix.columns(); ++col) {
+                    decomposition.U(row, col) = decomposition.U(row, col) - decomposition.L(row, column) * decomposition.U(column, col);
                 }
             }
         }
 
-        return {};
+        return decomposition;
     }
 }
 
-/*TEST_SUITE("Matrix decomposition test suite") {
+TEST_SUITE("Matrix solve test suite") {
     TEST_CASE("Matrix Decomposition") {
-        //     |1  2  3|   |1  0  0|   |1  2  3|
-        // A = |1  1  1| = |1  1  0| * |0 -1 -2|
-        //     |3  3  1|   |3  3  1|   |0  0 -2|
+        //     |2.1  2512 -2512|        |2.1  2512     -2512|     |0        0       0|
+        // A = |-1.3  8.8  -7.6| -> L = |0    1563.9 -1565.1| R = |-0.61905 0       0|
+        //     |0.9  -6.2   4.6|        |0    0         -0.7|     |0.42857 -0.69237 0|
 
-        SUBCASE("LU") {
-            Matrix<double> A = {{{1, 2, 3}, {1, 1, 1}, {3, 3, 1}}};
-            //LUDecomposition::Decomposition<double> LU = LUDecomposition::Decompose(A);
+        SUBCASE("LU-Decomposition") {
+            Matrix<double> A = {
+#ifdef _ASMATRIX
+                {{2.1, 2512, -2516}, {-1.3, 8.8, -7.6}, {0.9, -6.2, 4.6}}
+#elif _ASARRAY
+                3, 3, (std::array<double, 9>{2.1, 2512, -2516, -1.3, 8.8, -7.6, 0.9, -6.2, 4.6}).data()
+#else
+                3, 3, {2.1, 2512, -2516, -1.3, 8.8, -7.6, 0.9, -6.2, 4.6}
+#endif
+            };
+            LUDecomposition::Decomposition<double> decomposition = LUDecomposition::Decompose(A);
 
-            Matrix<double> expectedL = {{{1, 0, 0}, {1, 1, 0}, {3, 3, 1}}};
-            Matrix<double> expectedU = {{{1, 2, 3}, {0, -1, -2}, {0, 0, -2}}};
+            Matrix<double> expectedU = {
+#ifdef _ASMATRIX
+                {{2.1, 2512, -2512}, {0, 1563.9, -1565.1}, {0, 0, -0.7}}
+#elif _ASARRAY
+                3, 3, (std::array<double, 9>{2.1, 2512, -2512, 0, 1563.9, -1565.1, 0, 0, -0.7}).data()
+#else
+                3, 3, {2.1, 2512, -2512, 0, 1563.9, -1565.1, 0, 0, -0.7}
+#endif
+            };
 
-            //CHECK(TestUtils::CompareMatrix(LU.L, expectedL));
-            //CHECK(TestUtils::CompareMatrix(LU.U, expectedU));
+            Matrix<double> expectedL = {
+#ifdef _ASMATRIX
+                {{0, 0, 0}, {-0.61905, 0, 0}, {0.42857, -0.69237, 0}}
+#elif _ASARRAY
+                3, 3, (std::array<double, 9>{0, 0, 0, -0.61905, 0, 0, 0.42857, -0.69237, 0}).data()
+#else
+                3, 3, {0, 0, 0, -0.61905, 0, 0, 0.42857, -0.69237, 0}
+#endif
+            };
+
+            CHECK(TestUtils::CompareMatrix(decomposition.L, expectedL));
+            CHECK(TestUtils::CompareMatrix(decomposition.U, expectedU));
         }
     }
-}*/
+}
+
 
 #endif //LINALG_LUDECOMPOSITION_H

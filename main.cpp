@@ -7,7 +7,6 @@
 #include "matrix.h"
 #include "matrixFactory.h"
 #include "luDecomposition.h"
-#include "gauss.h"
 
 int main(int argc, char **argv) {
     doctest::Context context;
@@ -68,10 +67,8 @@ int main(int argc, char **argv) {
 
     fmt::print("\n");
 
-    fmt::print("LU-Decomposition with pivoting");
+    fmt::print("LU-Decomposition");
     LUDecomposition::Decomposition test = LUDecomposition::Decompose(a);
-
-    Gauss::Decomposition<double> b = Gauss::Decompose(a);
 
     if (context.shouldExit()) {
         return res;
