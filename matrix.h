@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <cassert>
 #include <algorithm>
+#include <numeric>
 
 template<typename T>
 class Matrix {
@@ -29,7 +30,7 @@ public:
     }
 #elif _ASARRAY
     Matrix() : matrix(nullptr) {}
-    Matrix(size_t nbRows, size_t nbColumns, T *m) : nbRows(nbRows), nbColumns(nbColumns) {
+    Matrix(size_t rows, size_t columns, T *m) : nbRows(rows), nbColumns(columns) {
         const size_t size = nbRows*nbColumns;
 
         matrix = new T[size];
@@ -37,17 +38,14 @@ public:
 
         AssertData(*this);
     }
-    Matrix(size_t nbRows, size_t nbColumns) : nbRows(nbRows), nbColumns(nbColumns) {
+    Matrix(size_t rows, size_t columns) : nbRows(rows), nbColumns(columns) {
         const int size = nbRows * nbColumns;
         matrix = new T[size];
-        for(size_t index = 0; index < size; ++index) {
-            matrix[index] = 0;
-        }
+        std::fill(matrix, matrix + size, 0);
         AssertData(*this);
     }
     ~Matrix() {
         delete [] matrix;
-        matrix = nullptr;
     }
     Matrix(const Matrix &rhs) {
         if(this != &rhs) {
@@ -60,9 +58,7 @@ public:
 
             const size_t size = nbRows*nbColumns;
             matrix = new T[size];
-            for(size_t index = 0; index < size; ++index) {
-                matrix[index] = rhs.matrix[index];
-            }
+            std::copy(rhs.matrix, rhs.matrix + size, matrix);
         }
     }
     Matrix(Matrix &&rhs) {

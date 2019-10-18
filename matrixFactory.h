@@ -18,8 +18,7 @@ namespace MatrixFactory {
             vec[index*size + index] = 1;
         }
 
-        T * m = &vec[0];
-        Matrix<T> matrix(size, size, m);
+        Matrix<T> matrix(size, size, &vec[0]);
         return matrix;
     }
 
