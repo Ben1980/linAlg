@@ -40,34 +40,16 @@ TEST_SUITE("Matrix solve test suite") {
 
         SUBCASE("LU-Decomposition") {
             Matrix<double> A = {
-#ifdef _ASMATRIX
-                {{2.1, 2512, -2516}, {-1.3, 8.8, -7.6}, {0.9, -6.2, 4.6}}
-#elif _ASARRAY
                 3, 3, (std::array<double, 9>{2.1, 2512, -2516, -1.3, 8.8, -7.6, 0.9, -6.2, 4.6}).data()
-#else
-                3, 3, {2.1, 2512, -2516, -1.3, 8.8, -7.6, 0.9, -6.2, 4.6}
-#endif
             };
             LUDecomposition::Decomposition<double> decomposition = LUDecomposition::Decompose(A);
 
             Matrix<double> expectedU = {
-#ifdef _ASMATRIX
-                {{2.1, 2512, -2512}, {0, 1563.9, -1565.1}, {0, 0, -0.7}}
-#elif _ASARRAY
                 3, 3, (std::array<double, 9>{2.1, 2512, -2512, 0, 1563.9, -1565.1, 0, 0, -0.7}).data()
-#else
-                3, 3, {2.1, 2512, -2512, 0, 1563.9, -1565.1, 0, 0, -0.7}
-#endif
             };
 
             Matrix<double> expectedL = {
-#ifdef _ASMATRIX
-                {{0, 0, 0}, {-0.61905, 0, 0}, {0.42857, -0.69237, 0}}
-#elif _ASARRAY
                 3, 3, (std::array<double, 9>{0, 0, 0, -0.61905, 0, 0, 0.42857, -0.69237, 0}).data()
-#else
-                3, 3, {0, 0, 0, -0.61905, 0, 0, 0.42857, -0.69237, 0}
-#endif
             };
 
             CHECK(TestUtils::CompareMatrix(decomposition.L, expectedL));

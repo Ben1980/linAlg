@@ -15,13 +15,7 @@ int main(int argc, char **argv) {
     int res = context.run();
 
     Matrix<double> a = {
-#ifdef _ASMATRIX
-        {{3,2,1},{1,0,2}}
-#elif _ASARRAY
         2, 3, (std::array<double, 6>{3, 2, 1, 1, 0, 2}).data()
-#else
-        2, 3, {3, 2, 1, 1, 0, 2}
-#endif
     };
     Matrix<int> identity = MatrixFactory::IdentityMatrix<int>(4);
 

@@ -6,41 +6,93 @@
 #include <type_traits>
 #include <cassert>
 #include <algorithm>
-#include <array>
 
 template<typename T>
 class Matrix {
     static_assert(std::is_arithmetic<T>::value, "T must be numeric");
 
 public:
-    Matrix() = default;
 #ifdef _ASMATRIX
-    Matrix(const std::vector<std::vector<T>> &m) : nbRows(m.size()), nbColumns(m.front().size()), matrix(m) {
+    Matrix(size_t rows, size_t columns, T *m) : nbRows(rows), nbColumns(columns) {
+        matrix.resize(nbRows);
+        for(size_t rowIndex = 0; rowIndex < nbRows; ++rowIndex) {
+            auto & row = matrix[rowIndex];
+            row.reserve(nbColumns);
+            for(size_t column = 0; column < nbColumns; ++column) {
+                row.push_back(m[rowIndex*nbColumns + column]);
+            }
+        }
         AssertData(*this);
     }
     Matrix(size_t rows, size_t columns) : nbRows(rows), nbColumns(columns), matrix(std::vector<std::vector<T>>(rows, std::vector<T>(columns))) {
         AssertData(*this);
     }
-    Matrix(const Matrix &m) = default;
-    Matrix(Matrix &&m) = default;
 #elif _ASARRAY
-    Matrix(size_t nbRows, size_t nbColumns, T m[]) : nbRows(nbRows), nbColumns(nbColumns) {
-        const int size = nbRows * nbColumns;
+    Matrix() : matrix(nullptr) {}
+    Matrix(size_t nbRows, size_t nbColumns, T *m) : nbRows(nbRows), nbColumns(nbColumns) {
+        const size_t size = nbRows*nbColumns;
+
         matrix = new T[size];
-        for(size_t index = 0; index < size; ++index) {
-            matrix[index] = m[index];
-        }
+        std::copy(m, m + size, matrix);
+
         AssertData(*this);
     }
     Matrix(size_t nbRows, size_t nbColumns) : nbRows(nbRows), nbColumns(nbColumns) {
-        matrix = new double[nbRows * nbColumns];
+        const int size = nbRows * nbColumns;
+        matrix = new T[size];
+        for(size_t index = 0; index < size; ++index) {
+            matrix[index] = 0;
+        }
         AssertData(*this);
     }
     ~Matrix() {
         delete [] matrix;
+        matrix = nullptr;
+    }
+    Matrix(const Matrix &rhs) {
+        if(this != &rhs) {
+            nbRows = rhs.nbRows;
+            nbColumns = rhs.nbColumns;
+
+            if(matrix) {
+                delete [] matrix;
+            }
+
+            const size_t size = nbRows*nbColumns;
+            matrix = new T[size];
+            for(size_t index = 0; index < size; ++index) {
+                matrix[index] = rhs.matrix[index];
+            }
+        }
+    }
+    Matrix(Matrix &&rhs) {
+        if(this != &rhs) {
+            nbRows = std::move(rhs.nbRows);
+            nbColumns = std::move(rhs.nbColumns);
+            std::swap(matrix, rhs.matrix);
+        }
+    }
+    Matrix & operator=(const Matrix &rhs) {
+        if(this != &rhs) {
+            Matrix tmp(rhs);
+            swap(tmp, *this);
+        }
+        return *this;
+    }
+    Matrix & operator=(Matrix &&rhs) {
+        if(this != &rhs) {
+            Matrix tmp(rhs);
+            swap(tmp, *this);
+        }
+        return *this;
     }
 #else
-    Matrix(size_t nbRows, size_t nbColumns, const std::vector<T> &m) : nbRows(nbRows), nbColumns(nbColumns), matrix(m) {
+    Matrix(size_t nbRows, size_t nbColumns, T *m) : nbRows(nbRows), nbColumns(nbColumns) {
+        const int size = nbRows * nbColumns;
+        matrix.reserve(size);
+        for(size_t index = 0; index < size; ++index) {
+            matrix.push_back(m[index]);
+        }
         AssertData(*this);
     }
     Matrix(size_t nbRows, size_t nbColumns) : nbRows(nbRows), nbColumns(nbColumns), matrix(std::vector<T>(nbRows*nbColumns)) {
@@ -116,13 +168,19 @@ private:
         return C;
     }
 
-    const size_t nbRows{0};
-    const size_t nbColumns{0};
+    static void swap(Matrix &lhs, Matrix &rhs) {
+        std::swap(lhs.nbRows, rhs.nbRows);
+        std::swap(lhs.nbColumns, rhs.nbColumns);
+        std::swap(lhs.matrix, rhs.matrix);
+    }
+
+    size_t nbRows{0};
+    size_t nbColumns{0};
 
 #ifdef _ASMATRIX
     std::vector<std::vector<T>> matrix;
 #elif _ASARRAY
-    T * matrix;
+    T * matrix{nullptr};
 #else
     std::vector<T> matrix;
 #endif
@@ -190,22 +248,10 @@ namespace TestUtils {
 TEST_SUITE("Matrix test suite") {
     TEST_CASE ("Matrix Multiplication") {
         const Matrix<double> a = {
-#ifdef _ASMATRIX
-            {{3, 2, 1}, {1, 0, 2}}
-#elif _ASARRAY
             2, 3, (std::array<double, 6>{3, 2, 1, 1, 0, 2}).data()
-#else
-            2, 3, {3, 2, 1, 1, 0, 2}
-#endif
         };
         const Matrix<double> b = {
-#ifdef _ASMATRIX
-            {{1, 2}, {0, 1}, {4, 0}}
-#elif _ASARRAY
             3, 2, (std::array<double, 6>{1, 2, 0, 1, 4, 0}).data()
-#else
-            3, 2, {1, 2, 0, 1, 4, 0}
-#endif
         };
 
         SUBCASE("c=a*b") {
@@ -218,13 +264,7 @@ TEST_SUITE("Matrix test suite") {
 
             Matrix c = a * b;
             const Matrix<double> expected = {
-#ifdef _ASMATRIX
-                {{7, 8}, {9, 2}}
-#elif _ASARRAY
                 2, 2, (std::array<double, 4>{7, 8, 9, 2}).data()
-#else
-                2, 2, {7, 8, 9, 2}
-#endif
             };
 
             CHECK(TestUtils::CompareMatrix(c, expected));
@@ -240,13 +280,7 @@ TEST_SUITE("Matrix test suite") {
 
             Matrix c = b * a;
             const Matrix<double> expected = {
-#ifdef _ASMATRIX
-                {{5, 2, 5}, {1, 0, 2}, {12, 8, 4}}
-#elif _ASARRAY
                 3, 3, (std::array<double, 9>{5, 2, 5, 1, 0, 2, 12, 8, 4}).data()
-#else
-                3, 3, {5, 2, 5, 1, 0, 2, 12, 8, 4}
-#endif
             };
 
             CHECK(TestUtils::CompareMatrix(c, expected));
@@ -261,23 +295,11 @@ TEST_SUITE("Matrix test suite") {
             // |1  0  2|  |9|
 
             const Matrix<double> vec = {
-#ifdef _ASMATRIX
-                {{1}, {0}, {4}}
-#elif _ASARRAY
                 3, 1, (std::array<double, 3>{1, 0, 4}).data()
-#else
-                3, 1, {1, 0, 4}
-#endif
             };
             Matrix c = a * vec;
             const Matrix<double> expected = {
-#ifdef _ASMATRIX           
-                {{7}, {9}}
-#elif _ASARRAY
                 2, 1, (std::array<double, 2>{7, 9}).data()
-#else
-                2, 1, {7, 9}
-#endif
             };
 
             CHECK(TestUtils::CompareMatrix(c, expected));
@@ -291,23 +313,11 @@ TEST_SUITE("Matrix test suite") {
             // |3  2  1|  |7  8|
 
             const Matrix<double> vec = {
-#ifdef _ASMATRIX
-                {{3, 2, 1}}
-#elif _ASARRAY
                 1, 3, (std::array<double, 3>{3, 2, 1}).data()
-#else
-                1, 3, {3, 2, 1}
-#endif
             };
             Matrix c = vec * b;
             const Matrix<double> expected = {
-#ifdef _ASMATRIX
-                {{7, 8}}
-#elif _ASARRAY
                 1, 2, (std::array<double, 2>{7, 8}).data()
-#else
-                1, 2, {7, 8}
-#endif
             };
 
             CHECK(TestUtils::CompareMatrix(c, expected));
@@ -321,22 +331,10 @@ TEST_SUITE("Matrix test suite") {
             // |3  2  1|  |7|
 
             const Matrix<double> vecA = {
-#ifdef _ASMATRIX
-                {{3, 2, 1}}
-#elif _ASARRAY
                 1, 3, (std::array<double, 3>{3, 2, 1}).data()
-#else
-                1, 3, {3, 2, 1}
-#endif
             };
             const Matrix<double> vecB = {
-#ifdef _ASMATRIX
-                {{1}, {0}, {4}}
-#elif _ASARRAY
                 3, 1, (std::array<double, 3>{1, 0, 4}).data()
-#else
-                3, 1, {1, 0, 4}
-#endif
             };
             Matrix c = vecA * vecB;
 

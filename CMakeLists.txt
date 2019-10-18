@@ -4,8 +4,8 @@ project(linAlg)
 set(SOURCE main.cpp matrix.h utils.h matrixFactory.h luDecomposition.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE})
-add_compile_definitions(_ASMATRIX)
-#add_compile_definitions(_ASARRAY)
+#add_compile_definitions(_ASMATRIX)
+add_compile_definitions(_ASARRAY)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)

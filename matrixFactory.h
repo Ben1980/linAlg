@@ -12,13 +12,6 @@ namespace MatrixFactory {
         static_assert(std::is_arithmetic<T>::value, "C must be numeric");
         assert(size > 0);
 
-#ifdef _ASMATRIX
-        std::vector<std::vector<T>> matrix(size, std::vector<T>(size));
-        for(size_t index = 0; index < size; ++index) {
-            matrix[index][index] = 1;
-        }
-        return Matrix<T>(matrix);
-#elif _ASARRAY
         const size_t arrSize = size*size;
         std::vector<T> vec(arrSize);
         for(size_t index = 0; index < size; ++index) {
@@ -28,13 +21,6 @@ namespace MatrixFactory {
         T * m = &vec[0];
         Matrix<T> matrix(size, size, m);
         return matrix;
-#else
-        std::vector<T> matrix(size*size);
-        for(size_t index = 0; index < size; ++index) {
-            matrix[index*size + index] = 1;
-        }
-        return Matrix<T>(size, size, matrix);
-#endif
     }
 
     template<typename T>
@@ -78,13 +64,7 @@ TEST_SUITE("MatrixFactory test suite") {
 
         Matrix<int> identity = MatrixFactory::IdentityMatrix<int>(4);
         Matrix<int> expected = {
-#ifdef _ASMATRIX
-            {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}
-#elif _ASARRAY
             4, 4, (std::array<int, 16>{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}).data()
-#else
-            4, 4, {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
-#endif
         };
 
         CHECK(TestUtils::CompareMatrix(identity, expected));
