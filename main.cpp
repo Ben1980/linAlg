@@ -7,6 +7,7 @@
 #include "matrix.h"
 #include "matrixFactory.h"
 #include "luDecomposition.h"
+#include "pivotLUDecomposition.h"
 
 int main(int argc, char **argv) {
     doctest::Context context;
@@ -63,7 +64,10 @@ int main(int argc, char **argv) {
     fmt::print("\n");
 
     fmt::print("LU-Decomposition");
-    LUDecomposition::Decomposition test = LUDecomposition::Decompose(a);
+    LUDecomposition::Decomposition LU = LUDecomposition::Decompose(a);
+
+    fmt::print("Pivot-LU-Decomposition");
+    PivotLUDecomposition::Decomposition pivotLU = PivotLUDecomposition::Decompose(a);
 
     if (context.shouldExit()) {
         return res;
