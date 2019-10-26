@@ -189,25 +189,24 @@ inline auto operator*(const Matrix<U> &lhs, const Matrix<U> & rhs) {
 
 namespace TestUtils {
     template<typename T>
-    bool ValuesAreEqual(const T &toCheck, const T &expected) {
+    bool ValuesAreEqual(const T &toCheck, const T &expected, T epsilon = std::numeric_limits<T>::min()) {
         static_assert(std::is_arithmetic<T>::value, "T must be numeric");
 
         if constexpr (std::is_integral_v<T>) {
             return std::fabs(toCheck - expected) == 0;
         }
         else if (std::is_floating_point_v<T>) {
-            constexpr T EPSILON = std::numeric_limits<T>::min();
-            if (std::fabs(toCheck) < EPSILON && std::fabs(expected) < EPSILON) return true;
-            if (std::fabs(toCheck) > EPSILON && std::fabs(expected) < EPSILON) return false;
+            if (std::fabs(toCheck) < epsilon && std::fabs(expected) < epsilon) return true;
+            if (std::fabs(toCheck) > epsilon && std::fabs(expected) < epsilon) return false;
 
-            return std::fabs(toCheck/expected - 1) <= EPSILON;
+            return std::fabs(toCheck/expected - 1) <= epsilon;
         }
 
         return false;
     }
 
     template<typename T>
-    bool CompareMatrix(const Matrix<T> &toCheck, const Matrix<T> &expected) {
+    bool CompareMatrix(const Matrix<T> &toCheck, const Matrix<T> &expected, T epsilon = std::numeric_limits<T>::min()) {
         if(toCheck.rows() == 0 || expected.rows() == 0) return false;
         if(toCheck.columns() == 0 || expected.columns() == 0) return false;
         if(toCheck.rows() != expected.rows()) return false;
@@ -219,7 +218,7 @@ namespace TestUtils {
                 const T & data = toCheck(row, column);
                 const T & e = expected(row, column);
 
-                equalData = equalData && ValuesAreEqual(data, e);
+                equalData = equalData && ValuesAreEqual(data, e, epsilon);
             }
         }
 
