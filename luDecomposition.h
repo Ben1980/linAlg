@@ -37,9 +37,9 @@ TEST_SUITE("Matrix solve test suite") {
     TEST_CASE("Matrix Decomposition") {
         static const double EPSILON = 1e-10;
         SUBCASE("LU-Decomposition") {
-            //     |1 2 3|        |1 0 0|     |1  2  3|
-            // A = |1 1 1| -> L = |1 1 0| U = |0 -1 -2|
-            //     |3 3 1|        |3 3 1|     |0  0 -2|
+            //     |1 2 3|
+            // A = |1 1 1|
+            //     |3 3 1|
 
             Matrix<double> A = {
                 3, 3, (std::array<double, 9>{1, 2, 3, 1, 1, 1, 3, 3, 1}).data()
@@ -51,9 +51,9 @@ TEST_SUITE("Matrix solve test suite") {
         }
 
         SUBCASE("LU-Decomposition") {
-            //     |1 2 3|        |1 0 0|     |1  2  3|
-            // A = |1 1 1| -> L = |1 1 0| U = |0 -1 -2|
-            //     |3 3 1|        |3 3 1|     |0  0 -2|
+            //     |2.1  2512 -2516|
+            // A = |-1.3  8.8  -7.6|
+            //     |0.9   -6.2  4.6|
 
             Matrix<double> A = {
                 3, 3, (std::array<double, 9>{2.1, 2512, -2516, -1.3, 8.8, -7.6, 0.9, -6.2, 4.6}).data()
