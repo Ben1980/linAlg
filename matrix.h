@@ -121,7 +121,7 @@ public:
     }
 
     template<typename U>
-    friend inline auto operator*(const Matrix<U> &lhs, const Matrix<U> & rhs);
+    friend inline Matrix<U> operator*(const Matrix<U> &lhs, const Matrix<U> & rhs);
 
 private:
     static void AssertData(const Matrix<T> &m) {
@@ -140,28 +140,6 @@ private:
         assert(!m.matrix.empty());
         assert(m.matrix.size() == m.nbRows*m.nbColumns);
 #endif
-    }
-
-    static Matrix<T> Multiply(const Matrix<T> &lhs, const Matrix<T>& rhs) {
-        AssertData(lhs);
-        AssertData(rhs);
-        assert(lhs.columns() == rhs.rows());
-
-        const size_t lhsRows = lhs.rows();
-        const size_t rhsColumns = rhs.columns();
-        const size_t lhsColumns = lhs.columns();
-
-        Matrix<T> C(lhsRows, rhsColumns);
-        
-        for (size_t i = 0; i < lhsRows; ++i) {
-            for (size_t k = 0; k < rhsColumns; ++k) {
-                for (size_t j = 0; j < lhsColumns; ++j) {
-                    C(i, k) += lhs(i, j) * rhs(j, k);
-                }
-            }
-        }
-
-        return C;
     }
 
     static void swap(Matrix &lhs, Matrix &rhs) {
@@ -183,8 +161,26 @@ private:
 };
 
 template<typename U>
-inline auto operator*(const Matrix<U> &lhs, const Matrix<U> & rhs) {
-    return Matrix<U>::Multiply(lhs, rhs);
+inline Matrix<U> operator*(const Matrix<U> &lhs, const Matrix<U> & rhs) {
+    Matrix<U>::AssertData(lhs);
+    Matrix<U>::AssertData(rhs);
+    assert(lhs.columns() == rhs.rows());
+
+    const size_t lhsRows = lhs.rows();
+    const size_t rhsColumns = rhs.columns();
+    const size_t lhsColumns = lhs.columns();
+
+    Matrix<U> C(lhsRows, rhsColumns);
+    
+    for (size_t i = 0; i < lhsRows; ++i) {
+        for (size_t k = 0; k < rhsColumns; ++k) {
+            for (size_t j = 0; j < lhsColumns; ++j) {
+                C(i, k) += lhs(i, j) * rhs(j, k);
+            }
+        }
+    }
+
+    return C;
 }
 
 namespace TestUtils {
