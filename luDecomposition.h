@@ -1,6 +1,7 @@
 #ifndef LINALG_LUDECOMPOSITION_H
 #define LINALG_LUDECOMPOSITION_H
 
+#include <cassert>
 #include "matrix.h"
 #include "matrixFactory.h"
 
@@ -15,14 +16,17 @@ namespace LUDecomposition {
 
     template<typename T>
     Decomposition<T> Decompose(const Matrix<T> &matrix) {
+        assert(matrix.rows() == matrix.columns());
+
         Decomposition<T> decomposition(matrix);
 
         for(size_t column = 0; column < matrix.columns(); ++column) {
             for(size_t row = column + 1; row < matrix.rows(); ++row) {
                 const T & divisor = decomposition.U(column, column);
-                if(divisor > 0) {
-                    decomposition.L(row, column) = decomposition.U(row, column) / divisor;
-                }
+                assert(fabs(divisor) > std::numeric_limits<T>::min()); //a_ii != 0 is necessary because of pivoting with diaognal strategy
+                
+                decomposition.L(row, column) = decomposition.U(row, column) / divisor;
+
                 for(size_t col = column; col < matrix.columns(); ++col) {
                     decomposition.U(row, col) -= decomposition.L(row, column) * decomposition.U(column, col);
                 }

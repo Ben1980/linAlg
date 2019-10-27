@@ -16,13 +16,13 @@ int main(int argc, char **argv) {
     int res = context.run();
 
     Matrix<double> a = {
-        2, 3, (std::array<double, 6>{3, 2, 1, 1, 0, 2}).data()
+        3, 3, (std::array<double, 9>{3, 2, 1, 1, 0, 2, 1, 1, 1}).data()
     };
     Matrix<int> identity = MatrixFactory::IdentityMatrix<int>(4);
 
     fmt::print("\n");
 
-    const size_t maxNumberOfMatrixElements = 1024;
+    const size_t maxNumberOfMatrixElements = 512;//1024;
 #ifdef _ASMATRIX
     fmt::print("Performance test of matrix impelemntation with two dimensional vector\n");
     fmt::print("---------------------------------------------------------------------\n");
@@ -63,10 +63,8 @@ int main(int argc, char **argv) {
 
     fmt::print("\n");
 
-    fmt::print("LU-Decomposition");
     LUDecomposition::Decomposition LU = LUDecomposition::Decompose(a);
 
-    fmt::print("Pivot-LU-Decomposition");
     PivotLUDecomposition::Decomposition pivotLU = PivotLUDecomposition::Decompose(a);
 
     if (context.shouldExit()) {
