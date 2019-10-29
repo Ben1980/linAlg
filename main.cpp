@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 
     fmt::print("\n");
 
-    const size_t maxNumberOfMatrixElements = 512;//1024;
+    const size_t maxNumberOfMatrixElements = 1024;
 #ifdef _ASMATRIX
     fmt::print("Performance test of matrix impelemntation with two dimensional vector\n");
     fmt::print("---------------------------------------------------------------------\n");

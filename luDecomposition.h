@@ -16,18 +16,22 @@ namespace LUDecomposition {
 
     template<typename T>
     Decomposition<T> Decompose(const Matrix<T> &matrix) {
-        assert(matrix.rows() == matrix.columns());
+        const size_t nbRows = matrix.rows();
+        const size_t nbColumns = matrix.columns();
+        assert(nbRows == nbColumns);
 
         Decomposition<T> decomposition(matrix);
 
-        for(size_t column = 0; column < matrix.columns(); ++column) {
-            for(size_t row = column + 1; row < matrix.rows(); ++row) {
+        for(size_t column = 0; column < nbColumns; ++column) {
+            decomposition.L(column, column) = 1;
+
+            for(size_t row = column + 1; row < nbRows; ++row) {
                 const T & divisor = decomposition.U(column, column);
                 assert(fabs(divisor) > std::numeric_limits<T>::min()); //a_ii != 0 is necessary because of pivoting with diaognal strategy
                 
                 decomposition.L(row, column) = decomposition.U(row, column) / divisor;
 
-                for(size_t col = column; col < matrix.columns(); ++col) {
+                for(size_t col = column; col < nbColumns; ++col) {
                     decomposition.U(row, col) -= decomposition.L(row, column) * decomposition.U(column, col);
                 }
             }

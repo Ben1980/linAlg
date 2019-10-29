@@ -1,6 +1,7 @@
 #ifndef LINALG_PIVOTLUCOMPOSITION_H
 #define LINALG_PIVOTLUCOMPOSITION_H
 
+#include <cassert>
 #include "matrix.h"
 #include "matrixFactory.h"
 
@@ -11,24 +12,56 @@ namespace PivotLUDecomposition {
         Matrix<T> L;
         Matrix<T> U;
 
-        Decomposition(const Matrix<T> &matrix) : P(MatrixFactory::IdentityMatrix<T>(matrix.rows())), L(MatrixFactory::IdentityMatrix<T>(matrix.rows())), U(matrix) {}
+        Decomposition(const Matrix<T> &matrix) : P(matrix.rows(), matrix.columns()), L(matrix.rows(), matrix.columns()), U(matrix) {}
     };
 
     template<typename T>
     Decomposition<T> Decompose(const Matrix<T> &matrix) {
+        const size_t nbRows = matrix.rows();
+        const size_t nbColumns = matrix.columns();
+        assert(nbRows == nbColumns);
+
         Decomposition<T> decomposition(matrix);
 
-        /*for(size_t column = 0; column < matrix.columns(); ++column) {
-            for(size_t row = column + 1; row < matrix.rows(); ++row) {
-                const T & divisor = decomposition.U(column, column);
-                if(divisor > 0) {
-                    decomposition.L(row, column) = decomposition.U(row, column) / divisor;
+        for(size_t column = 0; column < nbColumns - 1; ++column) {
+            T qi = 0;
+            size_t index = 0;
+            for(size_t row = column; row < nbRows; ++row) {
+                T si = 0;
+                for(size_t col = column; col < nbColumns; ++col) {
+                    si += std::fabs(decomposition.U(row, col));
                 }
-                for(size_t col = column; col < matrix.columns(); ++col) {
+
+                const T tmpQi = std::fabs(decomposition.U(row, column)) / si;
+                if(tmpQi > qi) {
+                    qi = tmpQi;
+                    index = row;
+                }
+            }
+
+            if(index != column) {
+                decomposition.P(index, column) = 1;
+                for(size_t col = 0; col < nbColumns; ++col) {
+                    std::swap(decomposition.U(column, col), decomposition.U(index, col));
+                    std::swap(decomposition.L(column, col), decomposition.L(index, col));
+                }
+            }
+
+            for(size_t row = column + 1; row < nbRows; ++row) {
+                const T & divisor = decomposition.U(column, column);
+                assert(std::fabs(divisor) > std::numeric_limits<T>::min()); //a_ii != 0 is necessary because of pivoting with diaognal strategy
+                
+                decomposition.L(row, column) = decomposition.U(row, column) / divisor;
+
+                for(size_t col = column; col < nbColumns; ++col) {
                     decomposition.U(row, col) -= decomposition.L(row, column) * decomposition.U(column, col);
                 }
             }
-        }*/
+        }
+
+        for(size_t column = 0; column < nbColumns; ++column) {
+            decomposition.L(column, column) = 1;
+        }
 
         return decomposition;
     }
