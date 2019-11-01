@@ -29,7 +29,6 @@ public:
         AssertData(*this);
     }
 #elif _ASARRAY
-    //Matrix() : matrix(nullptr) {}
     Matrix(size_t rows, size_t columns, T *m) : nbRows(rows), nbColumns(columns) {
         const size_t size = nbRows*nbColumns;
 

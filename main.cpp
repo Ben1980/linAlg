@@ -32,8 +32,8 @@ int main(int argc, char **argv) {
         const auto start = std::chrono::system_clock::now();
         Matrix C = A * A;
         const auto end = std::chrono::system_clock::now();
-        const int elapsed= std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-        fmt::print("Elapsed time for C = A * A, {}x{}: {}ms\n", i,i, elapsed);
+        const double elapsed= std::chrono::duration<double>(end - start).count();
+        fmt::print("Elapsed time for C = A * A, {}x{}: {:.10f}s\n", i,i, elapsed);
     }
 #elif _ASARRAY
     fmt::print("Performance test of matrix impelemntation with raw array\n");
@@ -44,8 +44,8 @@ int main(int argc, char **argv) {
         const auto start = std::chrono::system_clock::now();
         Matrix C = A * A;
         const auto end = std::chrono::system_clock::now();
-        const int elapsed= std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-        fmt::print("Elapsed time for C = A * A, {}x{}: {}ms\n", i,i, elapsed);
+        const double elapsed= std::chrono::duration<double>(end - start).count();
+        fmt::print("Elapsed time for C = A * A, {}x{}: {:.10f}s\n", i,i, elapsed);
     }
 #else
     fmt::print("Performance test of matrix impelemntation with one dimensional vector\n");
@@ -56,8 +56,8 @@ int main(int argc, char **argv) {
         const auto start = std::chrono::system_clock::now();
         Matrix C = A * A;
         const auto end = std::chrono::system_clock::now();
-        const int elapsed= std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-        fmt::print("Elapsed time for C = A * A, {}x{}: {}ms\n", i,i, elapsed);
+        const double elapsed= std::chrono::duration<double>(end - start).count();
+        fmt::print("Elapsed time for C = A * A, {}x{}: {:.10f}s\n", i,i, elapsed);
     }
 #endif
 
