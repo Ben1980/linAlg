@@ -1,16 +1,22 @@
 #ifndef LINALG_MATRIXFACTORY_H
 #define LINALG_MATRIXFACTORY_H
 
+#include <exception>
 #include <random>
-#include <cassert>
-#include <functional>
+#include <vector>
 #include <array>
+#include "matrix.h"
+//#include <cassert>
+//#include <functional>
+//
 
 namespace MatrixFactory {
     template <typename T>
     Matrix<T> IdentityMatrix(size_t size) {
         static_assert(std::is_arithmetic<T>::value, "C must be numeric");
-        assert(size > 0);
+        if(size == 0) {
+            throw std::domain_error("Invalid defined matrix.");
+        }
 
         const size_t arrSize = size*size;
         std::vector<T> vec(arrSize);
@@ -35,8 +41,9 @@ namespace MatrixFactory {
     template <typename T>
     Matrix<T> RandomMatrix(const Range<T> &range) {
         static_assert(std::is_arithmetic<T>::value, "C must be numeric");
-        assert(range.rows > 0);
-        assert(range.columns > 0);
+        if(range.rows == 0 || range.columns == 0) {
+            throw std::domain_error("Invalid defined matrix.");
+        }
 
         Matrix<T> matrix(range.rows, range.columns);
 

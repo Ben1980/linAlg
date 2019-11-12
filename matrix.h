@@ -2,7 +2,6 @@
 #define LINALG_MATRIX_H
 
 #include <cmath>
-#include <vector>
 #include <type_traits>
 #include <algorithm>
 #include <numeric>
@@ -15,19 +14,20 @@ class Matrix {
 
 public:
     ~Matrix() = default;
-    Matrix(size_t rows, size_t columns, T *m) : nbRows(rows), nbColumns(columns) {
+    Matrix(size_t rows, size_t columns, T *m) 
+        : nbRows(rows), nbColumns(columns), matrix(std::make_unique<T[]>(rows*columns)) 
+    {
         const size_t size = nbRows*nbColumns;
-
-        matrix = std::make_unique<T[]>(size);
         std::copy(m, m + size, matrix.get());
 
         AssertData(*this);
     }
-    Matrix(size_t rows, size_t columns) : nbRows(rows), nbColumns(columns) {
-        const int size = nbRows * nbColumns;
-        matrix = std::make_unique<T[]>(size);
-
+    Matrix(size_t rows, size_t columns) 
+        : nbRows(rows), nbColumns(columns), matrix(std::make_unique<T[]>(rows*columns)) 
+    {
+        const size_t size = nbRows*nbColumns;
         std::fill(matrix.get(), matrix.get() + size, 0);
+
         AssertData(*this);
     }
     Matrix(const Matrix<T> &m) : nbRows(m.nbRows), nbColumns(m.nbColumns) {
@@ -83,11 +83,11 @@ public:
 
 private:
     static void AssertData(const Matrix<T> &m) {
-        if(m.nbRows < 1 || m.nbColumns < 1) {
-          throw std::domain_error("Invalid defined matrix.");
+        if(m.nbRows == 0 || m.nbColumns == 0) {
+            throw std::domain_error("Invalid defined matrix.");
         }
         if(m.nbRows != m.nbColumns) {
-          throw std::domain_error("Matrix is not square.");
+            throw std::domain_error("Matrix is not square.");
         }
     }
 
@@ -102,7 +102,7 @@ Matrix<U> operator*(const Matrix<U> &lhs, const Matrix<U> & rhs) {
     Matrix<U>::AssertData(lhs);
     Matrix<U>::AssertData(rhs);
     if(lhs.rows() != rhs.rows()) {
-      throw std::domain_error("Matrices have unequal size.");
+        throw std::domain_error("Matrices have unequal size.");
     }
 
     const size_t lhsRows = lhs.rows();
@@ -178,97 +178,27 @@ namespace TestUtils {
 TEST_SUITE("Matrix test suite") {
     TEST_CASE ("Matrix Multiplication") {
         const Matrix<double> a = {
-            2, 3, (std::array<double, 6>{3, 2, 1, 1, 0, 2}).data()
+            3, 3, (std::array<double, 9>{3, 2, 1, 1, 0, 2, 2, 1, 3}).data()
         };
         const Matrix<double> b = {
-            3, 2, (std::array<double, 6>{1, 2, 0, 1, 4, 0}).data()
+            3, 3, (std::array<double, 9>{1, 2, 2, 0, 1, 1, 4, 0, 3}).data()
         };
 
         SUBCASE("c=a*b") {
-            //            |1  2|
-            //            |0  1|
-            //            |4  0|
+            //            |1  2  2|
+            //            |0  1  1|
+            //            |4  0  3|
             //
-            // |3  2  1|  |7  8|
-            // |1  0  2|  |9  2|
+            // |3  2  1|  |7  8 11|
+            // |1  0  2|  |9  2  8|
+            // |2  1  3|  |14 5 14|
 
             Matrix c = a * b;
             const Matrix<double> expected = {
-                2, 2, (std::array<double, 4>{7, 8, 9, 2}).data()
+                3, 3, (std::array<double, 9>{7, 8, 11, 9, 2, 8, 14, 5, 14}).data()
             };
 
             CHECK(TestUtils::CompareMatrix(c, expected));
-        }
-
-        SUBCASE("c=b*a") {
-            //         |3  2  1|
-            //         |1  0  2|
-            //
-            // |1  2|  |5  2  5|
-            // |0  1|  |1  0  2|
-            // |4  0|  |12 8  4|
-
-            Matrix c = b * a;
-            const Matrix<double> expected = {
-                3, 3, (std::array<double, 9>{5, 2, 5, 1, 0, 2, 12, 8, 4}).data()
-            };
-
-            CHECK(TestUtils::CompareMatrix(c, expected));
-        }
-
-        SUBCASE("c=a*vec") {
-            //            |1|
-            //            |0|
-            //            |4|
-            //
-            // |3  2  1|  |7|
-            // |1  0  2|  |9|
-
-            const Matrix<double> vec = {
-                3, 1, (std::array<double, 3>{1, 0, 4}).data()
-            };
-            Matrix c = a * vec;
-            const Matrix<double> expected = {
-                2, 1, (std::array<double, 2>{7, 9}).data()
-            };
-
-            CHECK(TestUtils::CompareMatrix(c, expected));
-        }
-
-        SUBCASE("c=vec*b") {
-            //            |1  2|
-            //            |0  1|
-            //            |4  0|
-            //
-            // |3  2  1|  |7  8|
-
-            const Matrix<double> vec = {
-                1, 3, (std::array<double, 3>{3, 2, 1}).data()
-            };
-            Matrix c = vec * b;
-            const Matrix<double> expected = {
-                1, 2, (std::array<double, 2>{7, 8}).data()
-            };
-
-            CHECK(TestUtils::CompareMatrix(c, expected));
-        }
-
-        SUBCASE("c=vec*vec") {
-            //            |1|
-            //            |0|
-            //            |4|
-            //
-            // |3  2  1|  |7|
-
-            const Matrix<double> vecA = {
-                1, 3, (std::array<double, 3>{3, 2, 1}).data()
-            };
-            const Matrix<double> vecB = {
-                3, 1, (std::array<double, 3>{1, 0, 4}).data()
-            };
-            Matrix c = vecA * vecB;
-
-            CHECK(TestUtils::ValuesAreEqual(c(0, 0), 7.));
         }
     }
 }

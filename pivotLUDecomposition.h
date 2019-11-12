@@ -1,7 +1,7 @@
 #ifndef LINALG_PIVOTLUCOMPOSITION_H
 #define LINALG_PIVOTLUCOMPOSITION_H
 
-#include <cassert>
+#include <exception>
 #include "matrix.h"
 #include "matrixFactory.h"
 
@@ -19,7 +19,9 @@ namespace PivotLUDecomposition {
     Decomposition<T> Decompose(const Matrix<T> &matrix) {
         const size_t nbRows = matrix.rows();
         const size_t nbColumns = matrix.columns();
-        assert(nbRows == nbColumns);
+        if(nbRows != nbColumns) {
+            throw std::domain_error("Matrix is not square.");
+        }
 
         Decomposition<T> decomposition(matrix);
 
@@ -49,7 +51,9 @@ namespace PivotLUDecomposition {
 
             for(size_t row = column + 1; row < nbRows; ++row) {
                 const T & divisor = decomposition.U(column, column);
-                assert(std::fabs(divisor) > std::numeric_limits<T>::min()); //a_ii != 0 is necessary because of pivoting with diaognal strategy
+                if(std::fabs(divisor) < std::numeric_limits<T>::min()) {
+                    throw std::domain_error("Division by 0."); //a_ii != 0 is necessary because of pivoting with diaognal strategy
+                }
                 
                 decomposition.L(row, column) = decomposition.U(row, column) / divisor;
 
