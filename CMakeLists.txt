@@ -6,12 +6,12 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 #add_compile_options(-O3)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast")
 #set(CMAKE_CXX_FLAGS_DEBUG "-g")
 #set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 #add_compile_definitions(_ASMATRIX)
-add_compile_definitions(_ASARRAY)
+#add_compile_definitions(_ASARRAY)
 
 set(SOURCE main.cpp matrix.h utils.h matrixFactory.h luDecomposition.h pivotLUDecomposition.h)
 add_executable(${PROJECT_NAME} ${SOURCE})

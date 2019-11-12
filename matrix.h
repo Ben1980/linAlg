@@ -4,111 +4,70 @@
 #include <cmath>
 #include <vector>
 #include <type_traits>
-#include <cassert>
 #include <algorithm>
 #include <numeric>
+#include <memory>
+#include <exception>
 
 template<typename T>
 class Matrix {
     static_assert(std::is_arithmetic<T>::value, "T must be numeric");
 
 public:
-#ifdef _ASMATRIX
-    Matrix(size_t rows, size_t columns, T *m) : nbRows(rows), nbColumns(columns) {
-        matrix.resize(nbRows);
-        for(size_t rowIndex = 0; rowIndex < nbRows; ++rowIndex) {
-            auto & row = matrix[rowIndex];
-            row.reserve(nbColumns);
-            for(size_t column = 0; column < nbColumns; ++column) {
-                row.push_back(m[rowIndex*nbColumns + column]);
-            }
-        }
-        AssertData(*this);
-    }
-    Matrix(size_t rows, size_t columns) : nbRows(rows), nbColumns(columns), matrix(std::vector<std::vector<T>>(rows, std::vector<T>(columns))) {
-        AssertData(*this);
-    }
-#elif _ASARRAY
+    ~Matrix() = default;
     Matrix(size_t rows, size_t columns, T *m) : nbRows(rows), nbColumns(columns) {
         const size_t size = nbRows*nbColumns;
 
-        matrix = new T[size];
-        std::copy(m, m + size, matrix);
+        matrix = std::make_unique<T[]>(size);
+        std::copy(m, m + size, matrix.get());
 
         AssertData(*this);
     }
     Matrix(size_t rows, size_t columns) : nbRows(rows), nbColumns(columns) {
         const int size = nbRows * nbColumns;
-        matrix = new T[size];
-        std::fill(matrix, matrix + size, 0);
+        matrix = std::make_unique<T[]>(size);
+
+        std::fill(matrix.get(), matrix.get() + size, 0);
         AssertData(*this);
     }
-    ~Matrix() {
-        delete [] matrix;
-    }
-    Matrix(const Matrix &rhs) {
-        if(this != &rhs) {
-            nbRows = rhs.nbRows;
-            nbColumns = rhs.nbColumns;
-
-            if(matrix) {
-                delete [] matrix;
-            }
-
-            const size_t size = nbRows*nbColumns;
-            matrix = new T[size];
-            std::copy(rhs.matrix, rhs.matrix + size, matrix);
-        }
-    }
-    Matrix(Matrix &&rhs) {
-        if(this != &rhs) {
-            nbRows = std::move(rhs.nbRows);
-            nbColumns = std::move(rhs.nbColumns);
-            std::swap(matrix, rhs.matrix);
-        }
-    }
-    Matrix & operator=(const Matrix &rhs) {
-        if(this != &rhs) {
-            Matrix tmp(rhs);
-            swap(tmp, *this);
-        }
-        return *this;
-    }
-    Matrix & operator=(Matrix &&rhs) {
-        if(this != &rhs) {
-            Matrix tmp(rhs);
-            swap(tmp, *this);
-        }
-        return *this;
-    }
-#else
-    Matrix(size_t nbRows, size_t nbColumns, T *m) : nbRows(nbRows), nbColumns(nbColumns) {
+    Matrix(const Matrix<T> &m) : nbRows(m.nbRows), nbColumns(m.nbColumns) {
         const int size = nbRows * nbColumns;
-        matrix.reserve(size);
-        for(size_t index = 0; index < size; ++index) {
-            matrix.push_back(m[index]);
-        }
-        AssertData(*this);
+
+        matrix = std::make_unique<T[]>(size);
+        std::copy(m.matrix.get(), m.matrix.get() + size, matrix.get());
     }
-    Matrix(size_t nbRows, size_t nbColumns) : nbRows(nbRows), nbColumns(nbColumns), matrix(std::vector<T>(nbRows*nbColumns)) {
-        AssertData(*this);
+    Matrix(Matrix<T> &&m) : nbRows(std::move(m.nbRows)), nbColumns(std::move(m.nbColumns)) {
+        matrix.swap(m.matrix);
+
+        m.nbRows = 0;
+        m.nbColumns = 0;
+        m.matrix.release();
     }
-#endif
+    Matrix<T> & operator=(const Matrix<T> &m){
+        Matrix tmp(m);
+
+        nbRows = tmp.nbRows;
+        nbColumns = tmp.nbColumns;
+        matrix.reset(tmp.matrix.get());
+
+        return *this;
+    }
+    Matrix<T> & operator=(Matrix<T> &&m){
+        Matrix tmp(std::move(m));
+
+        std::swap(tmp.nbRows, nbRows);
+        std::swap(tmp.nbColumns, nbColumns);
+        matrix.swap(tmp.matrix);
+
+        return *this;
+    }
     
     const T & operator()(size_t row, size_t column) const {
-#ifdef _ASMATRIX       
-        return matrix[row][column];
-#else
         return matrix[row*nbColumns + column];
-#endif
     }
 
     T & operator()(size_t row, size_t column) {
-#ifdef _ASMATRIX       
-        return matrix[row][column];
-#else
         return matrix[row*nbColumns + column];
-#endif
     }
 
     [[nodiscard]] size_t rows() const {
@@ -120,50 +79,31 @@ public:
     }
 
     template<typename U>
-    friend inline Matrix<U> operator*(const Matrix<U> &lhs, const Matrix<U> & rhs);
+    friend Matrix<U> operator*(const Matrix<U> &lhs, const Matrix<U> & rhs);
 
 private:
     static void AssertData(const Matrix<T> &m) {
-#ifdef _ASMATRIX 
-        assert(!m.matrix.empty());
-        assert(!m.matrix.front().empty());
-
-        for(const auto & row : m.matrix) {
-            assert(row.size() == m.nbColumns);
+        if(m.nbRows < 1 || m.nbColumns < 1) {
+          throw std::domain_error("Invalid defined matrix.");
         }
-#elif _ASARRAY
-        assert(m.nbRows > 0);
-        assert(m.nbColumns > 0);
-        assert(m.matrix != nullptr);
-#else
-        assert(!m.matrix.empty());
-        assert(m.matrix.size() == m.nbRows*m.nbColumns);
-#endif
-    }
-
-    static void swap(Matrix &lhs, Matrix &rhs) {
-        std::swap(lhs.nbRows, rhs.nbRows);
-        std::swap(lhs.nbColumns, rhs.nbColumns);
-        std::swap(lhs.matrix, rhs.matrix);
+        if(m.nbRows != m.nbColumns) {
+          throw std::domain_error("Matrix is not square.");
+        }
     }
 
     size_t nbRows{0};
     size_t nbColumns{0};
 
-#ifdef _ASMATRIX
-    std::vector<std::vector<T>> matrix;
-#elif _ASARRAY
-    T * matrix{nullptr};
-#else
-    std::vector<T> matrix;
-#endif
+    std::unique_ptr<T[]> matrix{nullptr};
 };
 
 template<typename U>
-inline Matrix<U> operator*(const Matrix<U> &lhs, const Matrix<U> & rhs) {
+Matrix<U> operator*(const Matrix<U> &lhs, const Matrix<U> & rhs) {
     Matrix<U>::AssertData(lhs);
     Matrix<U>::AssertData(rhs);
-    assert(lhs.columns() == rhs.rows());
+    if(lhs.rows() != rhs.rows()) {
+      throw std::domain_error("Matrices have unequal size.");
+    }
 
     const size_t lhsRows = lhs.rows();
     const size_t rhsColumns = rhs.columns();
