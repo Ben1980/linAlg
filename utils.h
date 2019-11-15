@@ -1,17 +1,19 @@
 #ifndef LINALG_UTILS_H
 #define LINALG_UTILS_H
 
-//#include <fmt/format.h>
-//#include <vector>
-//#include <algorithm>
-//#include "matrix.h"
+#include <fmt/format.h>
+#include "matrix.h"
 
 namespace Utils {
     template<typename T>
     void PrintMatrix(const Matrix<T> &m) {
-        for(const auto &row : m()) {
-            //fmt::print("| {:^5} |\n", fmt::join(row, ""));
+        for(size_t row = 0; row < m.rows(); ++row) {
+            for(size_t column = 0; column < m.columns(); ++column) {
+                fmt::print("{} ", m(row, column));
+            }
+            fmt::print("\n");
         }
+        fmt::print("\n");
     }
 }
 
