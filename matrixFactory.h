@@ -6,9 +6,6 @@
 #include <vector>
 #include <array>
 #include "matrix.h"
-//#include <cassert>
-//#include <functional>
-//
 
 namespace MatrixFactory {
     template <typename T>

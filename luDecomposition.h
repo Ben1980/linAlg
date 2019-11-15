@@ -59,6 +59,26 @@ TEST_SUITE("Matrix solve test suite") {
             LUDecomposition::Decomposition<double> decomposition = LUDecomposition::Decompose(A);
 
             Matrix test = decomposition.L * decomposition.U;
+
+            for(size_t row = 0; row < decomposition.L.rows(); ++row) {
+                for(size_t column = 0; column < decomposition.L.columns(); ++column) {
+                    const double data = decomposition.L(row, column);
+
+                    fmt::print("{} ", data);
+                }
+                fmt::print("\n");
+            }
+            fmt::print("\n");
+            fmt::print("\n");
+            for(size_t row = 0; row < decomposition.U.rows(); ++row) {
+                for(size_t column = 0; column < decomposition.U.columns(); ++column) {
+                    const double data = decomposition.U(row, column);
+
+                    fmt::print("{} ", data);
+                }
+                fmt::print("\n");
+            }
+
             CHECK(TestUtils::CompareMatrix(test, A, EPSILON));
         }
 

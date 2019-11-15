@@ -1,7 +1,9 @@
 #ifndef LINALG_MATRIX_H
 #define LINALG_MATRIX_H
 
+#include <fmt/format.h>
 #include <cmath>
+#include <vector>
 #include <type_traits>
 #include <algorithm>
 #include <numeric>
@@ -94,7 +96,7 @@ private:
     size_t nbRows{0};
     size_t nbColumns{0};
 
-    std::unique_ptr<T[]> matrix{nullptr};
+    std::unique_ptr<T[]> matrix;
 };
 
 template<typename U>
@@ -127,10 +129,10 @@ namespace TestUtils {
     bool ValuesAreEqual(const T &toCheck, const T &expected, T epsilon = std::numeric_limits<T>::min()) {
         static_assert(std::is_arithmetic<T>::value, "T must be numeric");
 
-        if constexpr (std::is_integral_v<T>) {
+        if constexpr (std::is_integral<T>::value) {
             return std::fabs(toCheck - expected) == 0;
         }
-        else if (std::is_floating_point_v<T>) {
+        else if (std::is_floating_point<T>::value) {
             if (std::fabs(toCheck) < epsilon && std::fabs(expected) < epsilon) return true;
             if (std::fabs(toCheck) > epsilon && std::fabs(expected) < epsilon) return false;
 
