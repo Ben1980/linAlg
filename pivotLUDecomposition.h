@@ -4,6 +4,7 @@
 #include <exception>
 #include "matrix.h"
 #include "matrixFactory.h"
+#include "utils.h"
 
 namespace PivotLUDecomposition {
     template<typename T>
@@ -25,46 +26,46 @@ namespace PivotLUDecomposition {
 
         Decomposition<T> decomposition(matrix);
 
-        for(size_t column = 0; column < nbColumns - 1; ++column) {
-            T qi = 0;
-            size_t index = 0;
-            for(size_t row = column; row < nbRows; ++row) {
-                T si = 0;
-                for(size_t col = column; col < nbColumns; ++col) {
-                    si += std::fabs(decomposition.U(row, col));
-                }
+        decomposition.P = MatrixFactory::IdentityMatrix<T>(nbRows);
 
-                const T tmpQi = std::fabs(decomposition.U(row, column)) / si;
-                if(tmpQi > qi) {
-                    qi = tmpQi;
-                    index = row;
+        for(size_t k = 0; k < nbRows; ++k) {
+            T max = 0;
+            size_t pk = 0;
+            for(size_t i = k; i < nbRows; ++i) {
+                T s = 0;
+                for(size_t j = k; j < nbColumns; ++j) {
+                    s += std::fabs(decomposition.U(i, j));
                 }
-            }
-
-            if(index != column) {
-                decomposition.P(index, column) = 1;
-                for(size_t col = 0; col < nbColumns; ++col) {
-                    std::swap(decomposition.U(column, col), decomposition.U(index, col));
-                    std::swap(decomposition.L(column, col), decomposition.L(index, col));
+                T q = std::fabs(decomposition.U(i, k)) / s;
+                if(q > max) {
+                    max = q;
+                    pk = i;
                 }
             }
 
-            for(size_t row = column + 1; row < nbRows; ++row) {
-                const T & divisor = decomposition.U(column, column);
-                if(std::fabs(divisor) < std::numeric_limits<T>::min()) {
-                    throw std::domain_error("Division by 0."); //a_ii != 0 is necessary because of pivoting with diaognal strategy
-                }
-                
-                decomposition.L(row, column) = decomposition.U(row, column) / divisor;
+            if(std::fabs(max) < std::numeric_limits<T>::min()) {
+                throw std::domain_error("Pivot has 0 value.");
+            }
 
-                for(size_t col = column; col < nbColumns; ++col) {
-                    decomposition.U(row, col) -= decomposition.L(row, column) * decomposition.U(column, col);
+            if(pk != k) {
+                for(size_t j = 0; j < nbColumns; ++j) {
+                    std::swap(decomposition.P(k, j), decomposition.P(pk, j));
+                    std::swap(decomposition.L(k, j), decomposition.L(pk, j));
+                    std::swap(decomposition.U(k, j), decomposition.U(pk, j));
+                }
+            }
+
+            for(size_t i = k+1; i < nbRows; ++i) {
+                decomposition.L(i, k) = decomposition.U(i, k)/decomposition.U(k, k);
+
+                for(size_t j = k; j < nbColumns; ++j) {
+                    decomposition.U(i, j) = decomposition.U(i, j) - decomposition.L(i, k) * decomposition.U(k, j);
                 }
             }
         }
 
-        for(size_t column = 0; column < nbColumns; ++column) {
-            decomposition.L(column, column) = 1;
+        for(size_t k = 0; k < nbRows; ++k) {
+            decomposition.L(k,k) = 1;
         }
 
         return decomposition;
@@ -85,8 +86,16 @@ TEST_SUITE("Matrix solve test suite") {
             PivotLUDecomposition::Decomposition<double> decomposition = PivotLUDecomposition::Decompose(A);
 
             Matrix test1 = decomposition.L * decomposition.U;
+            
+            Matrix<double> P = {
+                3, 3, (std::array<double, 9>{0, 0, 1, 1, 0, 0, 0, 1, 0}).data()
+            };
+            CHECK(TestUtils::CompareMatrix(decomposition.P, P, EPSILON));
+
             Matrix test2 = decomposition.P * A;
+
             CHECK(TestUtils::CompareMatrix(test1, test2, EPSILON));
+            
         }
 
         SUBCASE("Pivot-LU-Decomposition Test 2") {
@@ -100,7 +109,14 @@ TEST_SUITE("Matrix solve test suite") {
             PivotLUDecomposition::Decomposition<double> decomposition = PivotLUDecomposition::Decompose(A);
 
             Matrix test1 = decomposition.L * decomposition.U;
-            Matrix test2 = decomposition.P * A;
+
+            Matrix<double> P = {
+                3, 3, (std::array<double, 9>{0, 0, 1, 1, 0, 0, 0, 1, 0}).data()
+            };
+            CHECK(TestUtils::CompareMatrix(decomposition.P, P, EPSILON));
+
+            Matrix test2 = P*A;
+
             CHECK(TestUtils::CompareMatrix(test1, test2, EPSILON));
         }
     }
