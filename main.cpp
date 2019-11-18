@@ -8,6 +8,7 @@
 #include "matrixFactory.h"
 #include "luDecomposition.h"
 #include "pivotLUDecomposition.h"
+#include "choleskyDecomposition.h"
 
 int main(int argc, char **argv) {
     doctest::Context context;
@@ -40,6 +41,8 @@ int main(int argc, char **argv) {
     LUDecomposition::Decomposition LU = LUDecomposition::Decompose(a);
 
     PivotLUDecomposition::Decomposition pivotLU = PivotLUDecomposition::Decompose(a);
+
+    CholeskyDecomposition::Decomposition cholesky = CholeskyDecomposition::Decompose(a);
 
     if (context.shouldExit()) {
         return res;
