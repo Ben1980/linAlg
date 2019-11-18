@@ -23,9 +23,10 @@ namespace LUDecomposition {
         }
 
         Decomposition<T> decomposition(matrix);
+        decomposition.L = MatrixFactory::IdentityMatrix<T>(nbRows);
 
         for(size_t column = 0; column < nbColumns; ++column) {
-            decomposition.L(column, column) = 1;
+            //decomposition.L(column, column) = 1;
 
             for(size_t row = column + 1; row < nbRows; ++row) {
                 const T & divisor = decomposition.U(column, column);
