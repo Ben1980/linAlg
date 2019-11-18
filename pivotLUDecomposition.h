@@ -1,5 +1,5 @@
-#ifndef LINALG_PIVOTLUCOMPOSITION_H
-#define LINALG_PIVOTLUCOMPOSITION_H
+#ifndef LINALG_PIVOTLUDECOMPOSITION_H
+#define LINALG_PIVOTLUDECOMPOSITION_H
 
 #include <exception>
 #include "matrix.h"
@@ -122,4 +122,4 @@ TEST_SUITE("Matrix solve test suite") {
     }
 }
 
-#endif //LINALG_PIVOTCOMPOSITION_H
+#endif //LINALG_PIVOTLUDECOMPOSITION_H
