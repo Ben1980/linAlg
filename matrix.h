@@ -80,6 +80,18 @@ public:
         return nbColumns;
     }
 
+    Matrix<T> transpose() const {
+        Matrix transposed = *this;
+        
+        for (size_t i = 0; i < nbRows-2; ++i) {
+            for (size_t k = i+1; k < nbColumns-1; ++k) {
+                std::swap(transposed(i,k), transposed(k,i));
+            }
+        }
+
+        return transposed;
+    }
+
     template<typename U>
     friend Matrix<U> operator*(const Matrix<U> &lhs, const Matrix<U> & rhs);
 
@@ -201,6 +213,32 @@ TEST_SUITE("Matrix test suite") {
             };
 
             CHECK(TestUtils::CompareMatrix(c, expected));
+        }
+    }
+
+    TEST_CASE ("Transposing Matrix") {
+        SUBCASE("Transposing Matrix Test 1") {
+            //     |5  7  3|
+            // A = |7 11  2|
+            //     |3  2  6|
+
+            Matrix<double> A = {
+                3, 3, (std::array<double, 9>{5, 7, 3, 7, 11, 2, 3, 2, 6}).data()
+            };
+
+            CHECK(TestUtils::CompareMatrix(A.transpose(), A));
+        }
+
+        SUBCASE("Transposing Matrix Test 2") {
+            //     |5  1  2|
+            // A = |7 11  3|
+            //     |3  2  4|
+
+            Matrix<double> A = {
+                3, 3, (std::array<double, 9>{5, 1, 2, 7, 11, 3, 3, 2, 4}).data()
+            };
+
+            CHECK_FALSE(TestUtils::CompareMatrix(A.transpose(), A));
         }
     }
 }
