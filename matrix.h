@@ -83,9 +83,9 @@ public:
     Matrix<T> transpose() const {
         Matrix transposed = *this;
         
-        for (size_t i = 0; i < nbRows-2; ++i) {
-            for (size_t k = i+1; k < nbColumns-1; ++k) {
-                std::swap(transposed(i,k), transposed(k,i));
+        for (size_t row = 0; row < nbRows-2; ++row) {
+            for (size_t column = row+1; column < nbColumns-1; ++column) {
+                std::swap(transposed(row,column), transposed(column,row));
             }
         }
 
