@@ -15,29 +15,36 @@ namespace CholeskyDecomposition {
         }
 
         Matrix<T> L(nbRows, nbColumns);
-        for(size_t i = 0; i < nbRows; i++) {
-            for(size_t j = 0; j < nbColumns; j++) {
-                
-            }
-        }
+        
+        for(size_t i = 0; i < nbRows; ++i) {
+            for(size_t k = 0; k < nbColumns; ++k) {
+                if(i == k) {
+                    T sum = matrix(k, k);
+                    if(k > 0) {
+                        for(size_t j = 0; j <= k-1; ++j) {
+                            sum -= L(k, j)*L(k, j);
+                        }
+                    }
 
-        /*for (size_t k = 0; k < nbColumns; ++k) {
-            const T & a_kk = L(k, k);
+                    if(sum <= std::numeric_limits<T>::min()) {
+                        throw std::domain_error("Matrix is not positive definit.");
+                    }
 
-            if(a_kk < std::numeric_limits<T>::min()) {
-                throw std::domain_error("Matrix is not positive definite.");
-            }
+                    L(i, k) = std::sqrt(sum);
+                }
+                if(i > k) {
+                    T sum = matrix(i, k);
+                    if(k > 0) {
+                        for(size_t j = 0; j <= k-1; ++j) {
+                            sum -= L(i, j)*L(k, j);
+                        }
+                    }
 
-            const T l_kk = std::sqrt(a_kk);
-            for (size_t i = k + 1; i < nbRows; ++i) {
-                const T l_ik = L(i, k) / l_kk;
-                
-                for (size_t j = k + 1; j < nbColumns; ++j) {
-                    L(i, j) = L(i, j) - l_ik*L(j, k) / l_kk;
+                    L(i, k) = 1.0/L(k, k)*sum;
                 }
             }
-        }*/
-
+        }
+        
         return L;
     }
 }
@@ -57,7 +64,7 @@ TEST_SUITE("Matrix solve test suite") {
 
             Matrix test = L * L.transpose();
 
-            CHECK(TestUtils::CompareMatrix(test, A, EPSILON));
+            CHECK(TestUtils::CompareMatrix(test, A, false, EPSILON));
         }
 
         SUBCASE("Cholesky-Decomposition Test 2") {
@@ -72,7 +79,18 @@ TEST_SUITE("Matrix solve test suite") {
             Matrix L = CholeskyDecomposition::Decompose(A);
 
             Matrix test = L * L.transpose();
-            CHECK(TestUtils::CompareMatrix(test, A, EPSILON));
+            CHECK(TestUtils::CompareMatrix(test, A, false, EPSILON));
+        }
+
+        SUBCASE("Cholesky-Decomposition Test 3, Error") {
+            //     |0  7  3|
+            // A = |7 11  2|
+            //     |3  2  6|
+
+            Matrix<double> A = {
+                3, 3, (std::array<double, 9>{0, 7, 3, 7, 11, 2, 3, 2, 6}).data()
+            };
+            CHECK_THROWS_AS(CholeskyDecomposition::Decompose(A), std::domain_error);
         }
     }
 }
