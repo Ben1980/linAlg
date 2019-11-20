@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 
     const size_t maxNumberOfMatrixElements = 1024;
     fmt::print("Performance test of matrix impelemntation\n");
-    fmt::print("--------------------------------------------------------\n");
+    fmt::print("Floating-Point ------------------------------------------\n");
     for(size_t i = 2; i <= maxNumberOfMatrixElements; i *= 2) {
         Matrix<double> A = MatrixFactory::RandomMatrix<double>({i, i, -100., 100.});
 
@@ -37,6 +37,17 @@ int main(int argc, char **argv) {
     }
 
     fmt::print("\n");
+    fmt::print("Performance test of matrix impelemntation\n");
+    fmt::print("Integer ------------------------------------------------\n");
+    for(size_t i = 2; i <= maxNumberOfMatrixElements; i *= 2) {
+        Matrix<int> A = MatrixFactory::RandomMatrix<int>({i, i, -100, 100});
+
+        const auto start = std::chrono::system_clock::now();
+        Matrix C = A * A;
+        const auto end = std::chrono::system_clock::now();
+        const double elapsed= std::chrono::duration<double>(end - start).count();
+        fmt::print("Elapsed time for C = A * A, {}x{}: {:.10f}s\n", i,i, elapsed);
+    }
 
     LUDecomposition::Decomposition LU = LUDecomposition::Decompose(a);
 
