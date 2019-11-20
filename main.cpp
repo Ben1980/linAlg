@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 
     fmt::print("\n");
 
-    const size_t maxNumberOfMatrixElements = 1024;
+    const size_t maxNumberOfMatrixElements = 2;//1024;
     fmt::print("Performance test of matrix impelemntation\n");
     fmt::print("--------------------------------------------------------\n");
     for(size_t i = 2; i <= maxNumberOfMatrixElements; i *= 2) {
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 
     PivotLUDecomposition::Decomposition pivotLU = PivotLUDecomposition::Decompose(a);
 
-    CholeskyDecomposition::Decomposition cholesky = CholeskyDecomposition::Decompose(a);
+    Matrix cholesky = CholeskyDecomposition::Decompose(a);
 
     if (context.shouldExit()) {
         return res;

@@ -7,16 +7,38 @@
 
 namespace CholeskyDecomposition {
     template<typename T>
-    struct Decomposition {
-        Matrix<T> L;
-        Matrix<T> U;
+    Matrix<T> Decompose(const Matrix<T> &matrix) {
+        const size_t nbRows = matrix.rows();
+        const size_t nbColumns = matrix.columns();
+        if(nbRows != nbColumns) {
+            throw std::domain_error("Matrix is not square.");
+        }
 
-        Decomposition(const Matrix<T> &matrix) : L(MatrixFactory::IdentityMatrix<T>(matrix.rows())), U(matrix) {}
-    };
+        Matrix<T> L(nbRows, nbColumns);
+        for(size_t i = 0; i < nbRows; i++) {
+            for(size_t j = 0; j < nbColumns; j++) {
+                
+            }
+        }
 
-    template<typename T>
-    Decomposition<T> Decompose(const Matrix<T> &matrix) {
-        throw std::invalid_argument("Not implemented!");
+        /*for (size_t k = 0; k < nbColumns; ++k) {
+            const T & a_kk = L(k, k);
+
+            if(a_kk < std::numeric_limits<T>::min()) {
+                throw std::domain_error("Matrix is not positive definite.");
+            }
+
+            const T l_kk = std::sqrt(a_kk);
+            for (size_t i = k + 1; i < nbRows; ++i) {
+                const T l_ik = L(i, k) / l_kk;
+                
+                for (size_t j = k + 1; j < nbColumns; ++j) {
+                    L(i, j) = L(i, j) - l_ik*L(j, k) / l_kk;
+                }
+            }
+        }*/
+
+        return L;
     }
 }
 
@@ -24,31 +46,32 @@ TEST_SUITE("Matrix solve test suite") {
     TEST_CASE("Matrix Decomposition") {
         static const double EPSILON = 1e-10;
         SUBCASE("Cholesky-Decomposition Test 1") {
-            //     |1 2 3|
-            // A = |1 1 1|
-            //     |3 3 1|
+            //     |5  7  3|
+            // A = |7 11  2|
+            //     |3  2  6|
 
             Matrix<double> A = {
-                3, 3, (std::array<double, 9>{1, 2, 3, 1, 1, 1, 3, 3, 1}).data()
+                3, 3, (std::array<double, 9>{5, 7, 3, 7, 11, 2, 3, 2, 6}).data()
             };
-            CholeskyDecomposition::Decomposition<double> decomposition = CholeskyDecomposition::Decompose(A);
+            Matrix L = CholeskyDecomposition::Decompose(A);
 
-            Matrix test = decomposition.L * decomposition.U;
+            Matrix test = L * L.transpose();
 
             CHECK(TestUtils::CompareMatrix(test, A, EPSILON));
         }
 
         SUBCASE("Cholesky-Decomposition Test 2") {
-            //     |2.1  2512 -2516|
-            // A = |-1.3  8.8  -7.6|
-            //     |0.9   -6.2  4.6|
+            //     | 9   3   -6   12|
+            // A = | 3   26  -7  -11|
+            //     |-6  -7    9    7|
+            //     |12  -11   7   65|
 
             Matrix<double> A = {
-                3, 3, (std::array<double, 9>{2.1, 2512, -2516, -1.3, 8.8, -7.6, 0.9, -6.2, 4.6}).data()
+                4, 4, (std::array<double, 16>{9, 3, -6, 12, 3, 26, -7, -11, -6, -7, 9, 7, 12, -11, 7, 65}).data()
             };
-            CholeskyDecomposition::Decomposition<double> decomposition = CholeskyDecomposition::Decompose(A);
+            Matrix L = CholeskyDecomposition::Decompose(A);
 
-            Matrix test = decomposition.L * decomposition.U;
+            Matrix test = L * L.transpose();
             CHECK(TestUtils::CompareMatrix(test, A, EPSILON));
         }
     }

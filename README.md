@@ -17,9 +17,10 @@ You can execute the program by `./linAlg`
 
 ![Screen capture of programm execution](linAlg.gif)
 
-### Prerequisites
+### Prerequisites/Dependencies
 
-- [fmt](http://fmtlib.net/latest/index.html) external library used for formatting and printing results
+- [fmt](http://fmtlib.net/latest/index.html) External library used for formatting and printing results
+- [doctest](https://github.com/onqtam/doctest) Feature-rich C++11/14/17/20 single-header testing framework for unit tests and TDD
 
 ## Authors
 

@@ -191,11 +191,11 @@ namespace TestUtils {
 
 TEST_SUITE("Matrix test suite") {
     TEST_CASE ("Matrix Multiplication") {
-        const Matrix<double> a = {
-            3, 3, (std::array<double, 9>{3, 2, 1, 1, 0, 2, 2, 1, 3}).data()
+        const Matrix<int> a = {
+            3, 3, (std::array<int, 9>{3, 2, 1, 1, 0, 2, 2, 1, 3}).data()
         };
-        const Matrix<double> b = {
-            3, 3, (std::array<double, 9>{1, 2, 2, 0, 1, 1, 4, 0, 3}).data()
+        const Matrix<int> b = {
+            3, 3, (std::array<int, 9>{1, 2, 2, 0, 1, 1, 4, 0, 3}).data()
         };
 
         SUBCASE("c=a*b") {
@@ -208,8 +208,8 @@ TEST_SUITE("Matrix test suite") {
             // |2  1  3|  |14 5 14|
 
             Matrix c = a * b;
-            const Matrix<double> expected = {
-                3, 3, (std::array<double, 9>{7, 8, 11, 9, 2, 8, 14, 5, 14}).data()
+            const Matrix<int> expected = {
+                3, 3, (std::array<int, 9>{7, 8, 11, 9, 2, 8, 14, 5, 14}).data()
             };
 
             CHECK(TestUtils::CompareMatrix(c, expected));
@@ -222,8 +222,8 @@ TEST_SUITE("Matrix test suite") {
             // A = |7 11  2|
             //     |3  2  6|
 
-            Matrix<double> A = {
-                3, 3, (std::array<double, 9>{5, 7, 3, 7, 11, 2, 3, 2, 6}).data()
+            Matrix<int> A = {
+                3, 3, (std::array<int, 9>{5, 7, 3, 7, 11, 2, 3, 2, 6}).data()
             };
 
             CHECK(TestUtils::CompareMatrix(A.transpose(), A));
@@ -234,8 +234,8 @@ TEST_SUITE("Matrix test suite") {
             // A = |7 11  3|
             //     |3  2  4|
 
-            Matrix<double> A = {
-                3, 3, (std::array<double, 9>{5, 1, 2, 7, 11, 3, 3, 2, 4}).data()
+            Matrix<int> A = {
+                3, 3, (std::array<int, 9>{5, 1, 2, 7, 11, 3, 3, 2, 4}).data()
             };
 
             CHECK_FALSE(TestUtils::CompareMatrix(A.transpose(), A));
