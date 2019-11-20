@@ -75,6 +75,17 @@ TEST_SUITE("Matrix solve test suite") {
             Matrix test = decomposition.L * decomposition.U;
             CHECK(TestUtils::CompareMatrix(test, A, false, EPSILON));
         }
+
+        SUBCASE("LU-Decomposition Test 3, Error") {
+            //     |0 2 3|
+            // A = |1 0 1|
+            //     |3 3 0|
+
+            Matrix<double> A = {
+                3, 3, (std::array<double, 9>{0, 2, 3, 0, 1, 1, 0, 3, 1}).data()
+            };
+            CHECK_THROWS_AS(LUDecomposition::Decompose(A), std::domain_error);
+        }
     }
 }
 

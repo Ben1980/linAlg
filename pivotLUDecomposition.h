@@ -117,7 +117,18 @@ TEST_SUITE("Matrix solve test suite") {
 
             Matrix test2 = P*A;
 
-            CHECK(TestUtils::CompareMatrix(test1, test2, EPSILON));
+            CHECK(TestUtils::CompareMatrix(test1, test2, false, EPSILON));
+        }
+
+        SUBCASE("Pivot-LU-Decomposition Test 3, Error") {
+            //     |0 2 3|
+            // A = |1 0 1|
+            //     |3 3 0|
+
+            Matrix<double> A = {
+                3, 3, (std::array<double, 9>{0, 2, 3, 0, 1, 1, 0, 3, 1}).data()
+            };
+            CHECK_THROWS_AS(PivotLUDecomposition::Decompose(A), std::domain_error);
         }
     }
 }
