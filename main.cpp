@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     int res = context.run();
 
     Matrix<double> a = {
-        3, 3, (std::array<double, 9>{3, 2, 1, 1, 0, 2, 1, 1, 1}).data()
+        3, 3, (std::array<double, 9>{5, 7, 3, 7, 11, 2, 3, 2, 6}).data()
     };
     Matrix<int> identity = MatrixFactory::IdentityMatrix<int>(4);
 
