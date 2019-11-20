@@ -83,8 +83,8 @@ public:
     Matrix<T> transpose() const {
         Matrix transposed = *this;
         
-        for (size_t row = 0; row < nbRows-2; ++row) {
-            for (size_t column = row+1; column < nbColumns-1; ++column) {
+        for (size_t row = 0; row < nbRows-1; ++row) {
+            for (size_t column = row+1; column < nbColumns; ++column) {
                 std::swap(transposed(row,column), transposed(column,row));
             }
         }
@@ -239,6 +239,22 @@ TEST_SUITE("Matrix test suite") {
             };
 
             CHECK_FALSE(TestUtils::CompareMatrix(A.transpose(), A));
+        }
+
+        SUBCASE("Transposing Matrix Test 3") {
+            //     |2 0 0|      |2 1 0|
+            // A = |1 2 0| AT = |0 2 1|
+            //     |0 1 2|      |0 0 2|
+
+            Matrix<int> A = {
+                3, 3, (std::array<int, 9>{2, 0, 0, 1, 2, 0, 0, 1, 2}).data()
+            };
+
+            Matrix<int> AT = {
+                3, 3, (std::array<int, 9>{2, 1, 0, 0, 2, 1, 0, 0, 2}).data()
+            };
+
+            CHECK(TestUtils::CompareMatrix(A.transpose(), AT));
         }
     }
 }
