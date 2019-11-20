@@ -90,11 +90,11 @@ TEST_SUITE("Matrix solve test suite") {
             Matrix<double> P = {
                 3, 3, (std::array<double, 9>{0, 0, 1, 1, 0, 0, 0, 1, 0}).data()
             };
-            CHECK(TestUtils::CompareMatrix(decomposition.P, P, EPSILON));
+            CHECK(TestUtils::CompareMatrix(decomposition.P, P, false, EPSILON));
 
             Matrix test2 = decomposition.P * A;
 
-            CHECK(TestUtils::CompareMatrix(test1, test2, EPSILON));
+            CHECK(TestUtils::CompareMatrix(test1, test2, false, EPSILON));
             
         }
 
@@ -113,7 +113,7 @@ TEST_SUITE("Matrix solve test suite") {
             Matrix<double> P = {
                 3, 3, (std::array<double, 9>{0, 0, 1, 1, 0, 0, 0, 1, 0}).data()
             };
-            CHECK(TestUtils::CompareMatrix(decomposition.P, P, EPSILON));
+            CHECK(TestUtils::CompareMatrix(decomposition.P, P, false, EPSILON));
 
             Matrix test2 = P*A;
 

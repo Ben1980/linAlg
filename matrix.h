@@ -155,7 +155,7 @@ namespace TestUtils {
     }
 
     template<typename T>
-    bool CompareMatrix(const Matrix<T> &toCheck, const Matrix<T> &expected, T epsilon = std::numeric_limits<T>::min()) {
+    bool CompareMatrix(const Matrix<T> &toCheck, const Matrix<T> &expected, bool printResults = false, T epsilon = std::numeric_limits<T>::min()) {
         if(toCheck.rows() == 0 || expected.rows() == 0) return false;
         if(toCheck.columns() == 0 || expected.columns() == 0) return false;
         if(toCheck.rows() != expected.rows()) return false;
@@ -171,7 +171,7 @@ namespace TestUtils {
             }
         }
 
-        if(!equalData) {
+        if(printResults) {
             std::vector<T> check(toCheck.rows()*toCheck.columns()), expect(expected.rows()*expected.columns());
 
             for(size_t row = 0; row < expected.rows(); ++row) {

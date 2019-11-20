@@ -59,7 +59,7 @@ TEST_SUITE("Matrix solve test suite") {
 
             Matrix test = decomposition.L * decomposition.U;
 
-            CHECK(TestUtils::CompareMatrix(test, A, EPSILON));
+            CHECK(TestUtils::CompareMatrix(test, A, false, EPSILON));
         }
 
         SUBCASE("LU-Decomposition Test 2") {
@@ -73,7 +73,7 @@ TEST_SUITE("Matrix solve test suite") {
             LUDecomposition::Decomposition<double> decomposition = LUDecomposition::Decompose(A);
 
             Matrix test = decomposition.L * decomposition.U;
-            CHECK(TestUtils::CompareMatrix(test, A, EPSILON));
+            CHECK(TestUtils::CompareMatrix(test, A, false, EPSILON));
         }
     }
 }
