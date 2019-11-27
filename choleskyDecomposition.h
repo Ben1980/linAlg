@@ -37,10 +37,10 @@ namespace CholeskyDecomposition {
                 L(k, k) = std::sqrt(a_kk);
 
                 for(size_t i = k + 1; i < nbRows; ++i) {
-                    L(i, k) = L(i, k)/L(k, k);
+                    L(i, k) /= L(k, k);
                     
                     for(size_t j = k + 1; j <= i; ++j) {
-                        L(i, j) = L(i, j) - L(i, k) * L(j, k);
+                        L(i, j) -= L(i, k) * L(j, k);
                     }
                 }
             }
