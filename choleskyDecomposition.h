@@ -7,6 +7,20 @@
 
 namespace CholeskyDecomposition {
     template<typename T>
+    Matrix<T> SimplifySymmetricMatrix(Matrix<T> matrix) {
+        const size_t nbRows = matrix.rows();
+        const size_t nbColumns = matrix.columns();
+
+        for(size_t row = 0; row < nbRows; ++row) {
+            for(size_t column = row + 1; column < nbColumns; ++column) {
+                matrix(row, column) = 0;
+            }
+        }
+
+        return matrix;
+    }
+
+    template<typename T>
     Matrix<T> Decompose(const Matrix<T> &matrix) {
         const size_t nbRows = matrix.rows();
         const size_t nbColumns = matrix.columns();
@@ -14,34 +28,24 @@ namespace CholeskyDecomposition {
             throw std::domain_error("Matrix is not square.");
         }
 
-        Matrix<T> L(nbRows, nbColumns);
+        Matrix<T> L = SimplifySymmetricMatrix(matrix);
         
-        for(size_t i = 0; i < nbRows; ++i) {
-            for(size_t k = 0; k < nbColumns; ++k) {
-                if(i == k) {
-                    T sum = matrix(k, k);
-                    if(k > 0) {
-                        for(size_t j = 0; j <= k-1; ++j) {
-                            sum -= L(k, j)*L(k, j);
-                        }
-                    }
+        for(size_t k = 0; k < nbColumns; ++k) {
+            const T & a_kk = L(k, k);
+            
+            if(a_kk > 0) {
+                L(k, k) = std::sqrt(a_kk);
 
-                    if(sum <= std::numeric_limits<T>::min()) {
-                        throw std::domain_error("Matrix is not positive definit.");
+                for(size_t i = k + 1; i < nbRows; ++i) {
+                    L(i, k) = L(i, k)/L(k, k);
+                    
+                    for(size_t j = k + 1; j <= i; ++j) {
+                        L(i, j) = L(i, j) - L(i, k) * L(j, k);
                     }
-
-                    L(i, k) = std::sqrt(sum);
                 }
-                if(i > k) {
-                    T sum = matrix(i, k);
-                    if(k > 0) {
-                        for(size_t j = 0; j <= k-1; ++j) {
-                            sum -= L(i, j)*L(k, j);
-                        }
-                    }
-
-                    L(i, k) = 1.0/L(k, k)*sum;
-                }
+            }
+            else {
+                throw std::domain_error("Matrix is not positive definit.");
             }
         }
         
