@@ -15,8 +15,6 @@ To get it up and running you just need to execute:
 
 You can execute the program by `./linAlg`
 
-![Screen capture of programm execution](linAlg.gif)
-
 ### Prerequisites/Dependencies
 
 - [fmt](http://fmtlib.net/latest/index.html) External library used for formatting and printing results
