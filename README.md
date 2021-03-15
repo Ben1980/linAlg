@@ -1,8 +1,8 @@
 # linAlg
 
-A collection of numerical matrix decomposition methods, as discussed on [thoughts-on-cpp.com](https://thoughts-on-cpp.com).
+A collection of numerical matrix decomposition methods, as discussed on [thoughts-on-coding.com](https://thoughts-on-coding.com).
 
-[Numerical Methods in C++ Part 4: Decomposition of Linear Equation Systems](https://thoughts-on-cpp.com/2019/06/12/numerical-methods-with-c-part-4-introduction-into-decomposition-methods-of-linear-equation-systems)
+[Numerical Methods in C++ Part 4: Decomposition of Linear Equation Systems](https://thoughts-on-coding.com/2019/06/12/numerical-methods-with-cpp-part-4-introduction-into-decomposition-methods-of-linear-equation-systems)
 - LU-Decomposition
 - LU-Decomposition with relative scaled pivot strategy
 - Cholesky-Decomposition
